@@ -1,0 +1,13 @@
+x simple tic-tac-toe app
+x real time Clock
+x entering player names
+x Material-UI
+x toggle views
+x create a todo by typing in the text field
+x update a Todo by clicking or tabbing to it and editing
+x complete a todo by clicking a check box
+x remove all complete todos with a Button
+x create new todo with enter key or new button
+x bug: text is copied to new todo
+tab focus changes when ENTER is hit
+x SHIFT + ENTER completes a todo
