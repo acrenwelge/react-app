@@ -3,7 +3,6 @@ import React from 'react';
 export default class Clock extends React.Component {
   constructor(props) {
     super(props);
-    // this.setState({date: new Date()});
     this.state = {
       date: new Date(),
       ticks: 0,
@@ -27,8 +26,8 @@ export default class Clock extends React.Component {
 
   render() {
     return (
-      <div width="100%">
-        <span>{this.state.date.toLocaleTimeString()} (+ {this.state.ticks} seconds)</span>
+      <div>
+        <span>{this.state.date.toLocaleTimeString()} (+{this.state.ticks} seconds)</span>
       </div>
     );
   }

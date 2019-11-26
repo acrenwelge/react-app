@@ -11,3 +11,7 @@ x create new todo with enter key or new button
 x bug: text is copied to new todo
 tab focus changes when ENTER is hit
 x SHIFT + ENTER completes a todo
+x each todo has a priority (NONE, LOW, MED, HIGH)
+x sorting by priority
+x routing to game, todos
+navbar
