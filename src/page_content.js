@@ -14,7 +14,7 @@ export default function PageContent(props) {
 
   return (
     <Grid container direction="row" justify="center" alignContent="center" alignItems="center" spacing={3}>
-      <Grid item xs={10}>
+      <Grid item xs={12}>
         <Navbar />
       </Grid>
       <Grid style={centered} item xs={6}>

@@ -16,7 +16,7 @@ export default function Navbar() {
       <div>
         Andrew's React App
       </div>
-      <div>
+      <div style={{marginRight: "20%"}}>
         <ul>
           <li>
             <Link to="/">Home</Link>
@@ -29,7 +29,9 @@ export default function Navbar() {
           </li>
         </ul>
       </div>
-      <Clock />
+      <div>
+        <Clock />
+      </div>
     </header>
   )
 }

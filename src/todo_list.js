@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
+import {
+  Switch,
+  Route,
+  Redirect,
+  useRouteMatch,
+ } from 'react-router-dom';
 import Checkbox from '@material-ui/core/Checkbox';
 import Button from '@material-ui/core/Button';
 import Input from '@material-ui/core/Input';
 import FormGroup from '@material-ui/core/FormGroup';
 import TextField from '@material-ui/core/TextField';
+import TodoItemDetail from './todo_item_detail.js';
 import './todo_list.css';
 
 function TodoItem(props) {
   const item = props.item;
   const isCompleteClass = item.completed ? 'item-done' : '';
   const priorityClass = `priority-${item.priority}`;
+
   return (
     <li>
       <FormGroup row>
@@ -18,6 +26,7 @@ function TodoItem(props) {
           value={item.id}
           tabIndex={item.id * 3}
           />
+
 
         <Input type="text"
           tabIndex={item.id * 3 + 1}
@@ -36,7 +45,6 @@ function TodoItem(props) {
           }
           onChange={(e) => props.onPriorityChange(e,item.id)}
           />
-
       </FormGroup>
     </li>
   )
@@ -64,6 +72,9 @@ function TodoList() {
         priority: null
       }]
     );
+  const [toItemDetail, updateToItemDetail] = useState(null);
+
+  let match = useRouteMatch();
 
   let getMaxId = () => {
     let maxId = 0;
@@ -194,6 +205,8 @@ function TodoList() {
     if (e.key === "Enter") {
       if (e.shiftKey) {
         toggleCompleted(id);
+      } else if (e.ctrlKey) {
+        updateToItemDetail(id);
       } else {
         addItem({
           id: getMaxId() + 1,
@@ -218,8 +231,8 @@ function TodoList() {
     )
   });
 
-  return (
-    <React.Fragment>
+  const listView = (
+    <>
       <div>
         <h1>My Todos</h1>
       </div>
@@ -244,10 +257,22 @@ function TodoList() {
           Sort
         </Button>
       </div>
+    </>
+  )
+
+  return (
+    <React.Fragment>
+        {toItemDetail ? <Redirect to={`${match.url}/${toItemDetail}`} /> : '' }
+        <Switch>
+          <Route exact path={match.path}>
+            {listView}
+          </Route>
+          <Route path={`${match.path}/:id`}>
+            <TodoItemDetail todos={todos}/>
+          </Route>
+        </Switch>
     </React.Fragment>
   )
 }
 
-export {
-  TodoList
-}
+export default TodoList;

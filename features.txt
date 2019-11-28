@@ -14,4 +14,5 @@ x SHIFT + ENTER completes a todo
 x each todo has a priority (NONE, LOW, MED, HIGH)
 x sorting by priority
 x routing to game, todos
-navbar
+x navbar
+x CTRL + ENTER brings up todo details
