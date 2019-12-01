@@ -1,3 +1,19 @@
+My React application to teach myself.
+
+Dockerized - build and run the image yourself:
+```
+docker build -t imgname:tagname .
+docker run -p 8080:8080 imgname:tagname
+```
+
+Or use docker-compose:
+```
+docker-compose up -d
+```
+
+You should then be able to hit the app at `localhost:8080`. Note that **you cannot directly navigate to endpoints** because
+the app is being served by a static file server - e.g. `localhost:8080/todos` will NOT work.
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts

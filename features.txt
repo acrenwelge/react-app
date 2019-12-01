@@ -16,3 +16,4 @@ x sorting by priority
 x routing to game, todos
 x navbar
 x CTRL + ENTER brings up todo details
+add a login page with dummy credentials

@@ -19,13 +19,16 @@ export default function Navbar() {
       <div style={{marginRight: "20%"}}>
         <ul>
           <li>
-            <Link to="/">Home</Link>
+            <Link to="/home">Home</Link>
           </li>
           <li>
             <Link to="/game">Game</Link>
           </li>
           <li>
             <Link to="/todos">Todos</Link>
+          </li>
+          <li>
+            <Link to="/login">Logout</Link>
           </li>
         </ul>
       </div>
