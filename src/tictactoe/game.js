@@ -156,12 +156,6 @@ function Game(props) {
     });
   }
 
-  const sortHistoryOrder = () => {
-    setHistory(history => {
-      return history.slice().reverse();
-    });
-  }
-
   const handleFormChange = (e) => {
     e.persist();
     setPlayers((oldPlayers) => {
@@ -221,7 +215,7 @@ function Game(props) {
   } else {
     return (
       <Container maxWidth="sm">
-        <h1>{(players.p1 != null && players.p2 != null) ? <span>{players.p1} vs {players.p2}</span> : null}</h1>
+        <h1><span>{players.p1} vs {players.p2}</span></h1>
         <div className="game-board">
           <Board
             squares = {current.squares}
@@ -231,7 +225,6 @@ function Game(props) {
         </div>
         <div className="game-info">
           <div>
-            <Button onClick={sortHistoryOrder} data-testid="history-sort">Sort history order</Button>
             <Button onClick={restart}>New Game</Button>
           </div>
           <div>{status}</div>

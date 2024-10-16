@@ -56,18 +56,38 @@ describe('TIC TAC TOE GAME', () => {
       cy.get('.game-info ol li').should('have.length', 2) // history length should not change
     })
     context('with a completed game', () => {
+      const game_board = '.game-board > :nth-child(1)'
       it('should display the winner after someone wins', () => {
         // p1 is X and goes first
-        cy.get('.game-board > :nth-child(1) > :nth-child(1) > :nth-child(1)').click() // X plays (0,0)
-        cy.get('.game-board > :nth-child(1) > :nth-child(1) > :nth-child(2)').click() // O plays (0,1)
-        cy.get('.game-board > :nth-child(1) > :nth-child(2) > :nth-child(1)').click() // X plays (1,0)
-        cy.get('.game-board > :nth-child(1) > :nth-child(2) > :nth-child(2)').click() // O plays (1,1)
-        cy.get('.game-board > :nth-child(1) > :nth-child(3) > :nth-child(1)').click() // X plays (2,0)
+        cy.get(`${game_board} > :nth-child(1) > :nth-child(1)`).click() // X plays
+        cy.get(`${game_board} > :nth-child(1) > :nth-child(2)`).click() // O plays
+        cy.get(`${game_board} > :nth-child(2) > :nth-child(1)`).click() // X plays
+        cy.get(`${game_board} > :nth-child(2) > :nth-child(2)`).click() // O plays
+        cy.get(`${game_board} > :nth-child(3) > :nth-child(1)`).click() // X plays
         cy.contains(`The winner is ${p1testname} (X)`)
       })
-      it.skip('should highlight the winner board cells', () => {
+      it('should highlight the winner board cells', () => {
+        cy.get(`${game_board} > :nth-child(1) > :nth-child(1)`).click().as('hl1') // X plays
+        cy.get(`${game_board} > :nth-child(1) > :nth-child(2)`).click() // O plays
+        cy.get(`${game_board} > :nth-child(2) > :nth-child(1)`).click().as('hl2') // X plays
+        cy.get(`${game_board} > :nth-child(2) > :nth-child(2)`).click() // O plays
+        cy.get(`${game_board} > :nth-child(3) > :nth-child(1)`).click().as('hl3') // X plays
+        // each cell should have the 'hl' class for highlighting
+        cy.get('@hl1').should('have.class', 'hl')
+        cy.get('@hl2').should('have.class', 'hl')
+        cy.get('@hl3').should('have.class', 'hl')
       })
-      it.skip('should display a draw if no one wins', () => {
+      it.only('should display a draw if no one wins', () => {
+        cy.get(`${game_board} > :nth-child(1) > :nth-child(1)`).click() // X plays
+        cy.get(`${game_board} > :nth-child(1) > :nth-child(2)`).click() // O plays
+        cy.get(`${game_board} > :nth-child(2) > :nth-child(1)`).click() // X plays
+        cy.get(`${game_board} > :nth-child(2) > :nth-child(2)`).click() // O plays
+        cy.get(`${game_board} > :nth-child(3) > :nth-child(2)`).click() // X plays
+        cy.get(`${game_board} > :nth-child(3) > :nth-child(1)`).click() // O plays
+        cy.get(`${game_board} > :nth-child(1) > :nth-child(3)`).click() // X plays
+        cy.get(`${game_board} > :nth-child(3) > :nth-child(3)`).click() // O plays
+        cy.get(`${game_board} > :nth-child(2) > :nth-child(3)`).click() // X plays
+        cy.contains('The game is a draw!').should('exist')
       })
     })
     

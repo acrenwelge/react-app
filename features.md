@@ -13,7 +13,6 @@
 - ✅ SHIFT + ENTER completes a todo
 - ✅ each todo has a priority (NONE, LOW, MED, HIGH)
 - ✅ sorting by priority
-- ✅ routing to game, todos
 - ✅ CTRL + ENTER brings up todo details
 - ✅ login page with dummy credentials
 
@@ -26,7 +25,7 @@
 
 ## Project Todos
 
-- [ ] add a CI pipeline
+- ✅ add a CI pipeline
 
 ## Bugs Fixed
 

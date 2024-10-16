@@ -17,7 +17,7 @@ function TodoItemDetail(props) {
   const todo = find(id);
 
   return (
-    <div>
+    <div data-testid='item-detail'>
       <div>
         ID: {todo.id}
       </div>

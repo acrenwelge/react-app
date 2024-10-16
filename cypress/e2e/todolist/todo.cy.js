@@ -38,6 +38,39 @@ describe('My ToDo app', () => {
     cy.get(`${listitems} input[value*="testing"]`).should('not.exist')
   })
 
+  it('can check an item using SHIFT + ENTER', () => {
+    cy.get(`${listitems} input[value*="testing"]`)
+      .parents('li').find('input[type=checkbox]')
+      .should('not.be.checked')
+      .type('{shift}{enter}')
+      .should('be.checked')
+  })
+
+  it('can uncheck an item', () => {
+    cy.get(`${listitems} input[value*="React"]`)
+      .parents('li').find('input[type=checkbox]')
+      .should('be.checked')
+      .uncheck()
+      .should('not.be.checked')
+  })
+
+  it('can edit an item', () => {
+    const newItem = 'Write a React app'
+    cy.get(`${listitems} input[value*="testing"]`)
+      .clear()
+      .type(newItem)
+      .type('{enter}')
+      .as('editedItem')
+    cy.get('@editedItem').should('have.value', newItem)
+  })
+
+  it('can view item details', () => {
+    cy.get(`${listitems} input[value*="testing"]`)
+      .parents('li').find('input[type="text"]')
+      .type('{ctrl}{enter}')
+    cy.get('[data-testid="item-detail"]').should('exist')
+  })
+
   it('should sort items by priority', () => {
     cy.get('[data-testid="sort-by-priority"]').click()
     cy.get(listitems).first().find('input[type="text"]').should('have.value', 'Write a React app')
