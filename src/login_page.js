@@ -8,15 +8,24 @@ export default function LoginPage(props) {
   let attemptLogin = (e) => {
     const uname = document.getElementById('username-field').value;
     const pw = document.getElementById('password-field').value;
-    let loggedIn = auth.checkCreds(uname, pw);
+    const loggedIn = auth.checkCreds(uname, pw);
+    localStorage.setItem('credentials', JSON.stringify({username: uname, pw: pw}));
     if (loggedIn) {
       updateDoRedirect(true);
     } else {
       alert('INVALID LOGIN CREDENTIALS');
     }
   }
-
-  if (doRedirect) {
+  
+  let username, pw;
+  try {
+    const creds = JSON.parse(localStorage.getItem('credentials'));
+    username = creds.username;
+    pw = creds.pw;
+  } catch (e) {
+    console.warn('No credentials found');
+  }
+  if ((username && auth.checkCreds(username, pw)) || doRedirect) {
     return <Redirect to="/home" />
   }
 
@@ -25,7 +34,7 @@ export default function LoginPage(props) {
       <form id="login-form">
         Username: <input type="username" id="username-field" required />
         Password: <input type="password" id="password-field" required minLength="10"/>
-        <input type="button" value="Login" onClick={attemptLogin}/>
+        <input type="button" id="login-button" value="Login" onClick={attemptLogin}/>
       </form>
     </div>
   )

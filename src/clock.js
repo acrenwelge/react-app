@@ -3,14 +3,11 @@ import React from 'react';
 export default class Clock extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      date: new Date(),
-      ticks: 0,
-    };
+    this.state = new Date();
   }
 
   componentDidMount() {
-    this.timerId = setInterval(() => this.tick(),1000);
+    this.timerId = setInterval(() => this.tick(),1000 * 60);
   }
 
   componentWillUnmount() {
@@ -18,16 +15,17 @@ export default class Clock extends React.Component {
   }
 
   tick() {
-    this.setState(
-      { date: new Date(),
-        ticks: this.state.ticks + 1
-      });
+    this.setState(new Date());
   }
 
   render() {
     return (
       <div>
-        <span>{this.state.date.toLocaleTimeString()} (+{this.state.ticks} seconds)</span>
+        <span>{this.state.toLocaleTimeString([], {
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true,
+        })}</span>
       </div>
     );
   }

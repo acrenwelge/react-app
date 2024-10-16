@@ -1,41 +1,41 @@
-import React, { useState } from 'react';
-import {
-  Switch,
-  Route,
-  Redirect,
-  useRouteMatch,
- } from 'react-router-dom';
-import Checkbox from '@material-ui/core/Checkbox';
+import { ListItem } from '@material-ui/core';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import Input from '@material-ui/core/Input';
+import Checkbox from '@material-ui/core/Checkbox';
 import FormGroup from '@material-ui/core/FormGroup';
+import Input from '@material-ui/core/Input';
+import List from '@material-ui/core/List';
 import TextField from '@material-ui/core/TextField';
+import React, { forwardRef, useEffect, useRef, useState } from 'react';
+import {
+    Redirect,
+    Route,
+    Switch,
+    useRouteMatch,
+} from 'react-router-dom';
 import TodoItemDetail from './todo_item_detail.js';
 import './todo_list.css';
 
-function TodoItem(props) {
+const TodoItem = forwardRef((props, ref) => {
   const item = props.item;
-  const isCompleteClass = item.completed ? 'item-done' : '';
-  const priorityClass = `priority-${item.priority}`;
 
   return (
-    <li>
+    <ListItem>
       <FormGroup row>
         <Checkbox checked={item.completed}
           onChange={props.onToggle}
           value={item.id}
           tabIndex={item.id * 3}
           />
-
-
         <Input type="text"
           tabIndex={item.id * 3 + 1}
           value={item.text}
-          className={`${isCompleteClass} ${priorityClass}`}
+          className={`${item.completed ? 'item-done' :''} priority-${item.priority}`}
+          inputProps={{ className: `${item.completed ? 'item-done' :''}`}}
+          ref={ref}
           onKeyDown={(e) => props.onKeyDown(e, item.id)}
           onChange={(e) => props.onChange(e, item.id)}
           />
-
         <TextField type="number"
           label="priority"
           tabIndex={item.id * 3 + 2}
@@ -46,35 +46,44 @@ function TodoItem(props) {
           onChange={(e) => props.onPriorityChange(e,item.id)}
           />
       </FormGroup>
-    </li>
+    </ListItem>
   )
-}
+})
 
-function TodoList() {
+function TodoList(props){
   const [todos, updateTodos] = useState(
     [
       {
         id: 1,
-        text: 'Item 1',
+        text: 'Do some testing',
         completed: false,
-        priority: 1
+        priority: 2
       },
       {
         id: 2,
-        text: 'Item 2',
+        text: 'Write a React app',
         completed: true,
-        priority: 3,
+        priority: 1,
       },
       {
         id: 3,
-        text: 'Item 3',
+        text: 'Get a job!',
         completed: false,
-        priority: null
+        priority: 3,
       }]
     );
   const [toItemDetail, updateToItemDetail] = useState(null);
-
+  const [newItemAdded, setNewItemAdded] = useState(false);
+  const [hideCompleted, setHideCompleted] = useState(false);
+  const lastElementRef = useRef(null);
   let match = useRouteMatch();
+
+  useEffect(() => {
+    if (newItemAdded && lastElementRef.current) {
+      lastElementRef.current.click();
+      setNewItemAdded(false);
+    }
+  }, [newItemAdded]);
 
   let getMaxId = () => {
     let maxId = 0;
@@ -97,6 +106,7 @@ function TodoList() {
         });
         return newTodos;
       });
+      
     }
 
   let addItem = (item) => {
@@ -108,6 +118,7 @@ function TodoList() {
           completed: item.completed,
           priority: item.priority,
         });
+        setNewItemAdded(true);
         return newTodos;
       });
     }
@@ -149,13 +160,7 @@ function TodoList() {
   let removeCompleted = (e) => {
     e.persist();
     updateTodos(state => {
-      const newTodos = todos.filter(todo => {
-        if (!todo.completed) {
-          return true;
-        }
-        return false;
-      });
-      return newTodos;
+      return todos.filter(todo => {return !todo.completed});
     })
   }
 
@@ -218,11 +223,15 @@ function TodoList() {
   };
 
   const items = todos.map((entry, idx) => {
+    if (hideCompleted && entry.completed) {
+      return null;
+    }
     return (
       <TodoItem
         item={entry}
         key={entry.id}
         id={entry.id}
+        ref={idx === todos.length - 1 ? lastElementRef : null}
         onChange={editItem}
         onToggle={toggleCompletedEvent}
         onKeyDown={todoTextKeyInput}
@@ -233,30 +242,41 @@ function TodoList() {
 
   const listView = (
     <>
-      <div>
+      <Box>
         <h1>My Todos</h1>
-      </div>
-      <div>
-        <ul>
+      </Box>
+      <Box>
+        <List className='todo-list'>
           {items}
-        </ul>
-      </div>
-      <div>
+        </List>
+      </Box>
+      <Box>
         <Button
-        color="primary"
-        onClick={addItemBtnClick}>
+          data-testid="add-item"
+          color="primary"
+          variant='contained'
+          onClick={addItemBtnClick}>
           Add
         </Button>
         <Button
-        color="secondary"
-        onClick={removeCompleted}>
-          Remove Completed
+          data-testid="toggle-hide-completed"
+          color="default"
+          onClick={() => setHideCompleted(!hideCompleted)}
+          >
+          {hideCompleted ? 'Show' : 'Hide'} Completed
         </Button>
         <Button
+          data-testid="remove-completed"
+          color="secondary"
+          onClick={removeCompleted}>
+          Delete All Completed
+        </Button>
+        <Button
+          data-testid='sort-by-priority'
           onClick={sortByPriority}>
           Sort
         </Button>
-      </div>
+      </Box>
     </>
   )
 

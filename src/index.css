@@ -19,7 +19,7 @@ header div {
   display: inline-block;
 }
 
-.hl {
+.square.hl {
   background-color: yellow;
 }
 

@@ -1,18 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Redirect
+    Redirect,
+    Route,
+    BrowserRouter as Router,
+    Switch
 } from "react-router-dom";
-import TodoList from './todo_list.js';
-import LoginPage from './login_page.js';
-import { Game } from './game.js';
-import PageContent from './page_content.js';
-import NotFound from './not_found.js';
 import auth from './auth.ts';
 import './index.css';
+import LoginPage from './login_page.js';
+import NotFound from './not_found.js';
+import PageContent from './page_content.js';
+import { Game } from './tictactoe/game.js';
+import TodoList from './todo_list/todo_list.js';
 
 function PrivateRoute({ children, ...rest }) {
   return (

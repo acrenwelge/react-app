@@ -1,5 +1,5 @@
 # base image
-FROM node:12.2.0-alpine
+FROM node:13.13.0-alpine AS base
 
 # set working directory
 WORKDIR /app
@@ -9,9 +9,12 @@ ENV PATH /app/node_modules/.bin:$PATH
 
 COPY . /app
 RUN npm install --silent
-RUN npm install react-scripts@3.0.1 -g --silent
-RUN npm install http-server -g
+RUN npm config set unsafe-perm true
+RUN npm install http-server@13.1.0 -g
 RUN npm build
 
+# multi-stage build
+FROM base
+
 # start app
-CMD http-server ./build
+CMD http-server ./build -p 8080 -a 0.0.0.0

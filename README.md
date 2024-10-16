@@ -1,13 +1,26 @@
-My React application to teach myself.
+# My Full Stack Test App
 
-Dockerized - build and run the image yourself:
+This is a full stack test app that I built to demonstrate my skills in React, Node.js, and Express. The app is a todo list and tic tac toe game (view [the full feature list here](./features.md)). The front end is built with React and Material-UI, and the back end is built with Node.js and Express. The app is Dockerized and can be run locally with Docker or docker-compose.
+
+## Get Started
+
+### npm
+
+```bash
+npm install
+npm start
 ```
+
+### Docker
+
+```bash
 docker build -t imgname:tagname .
 docker run -p 8080:8080 imgname:tagname
 ```
 
-Or use docker-compose:
-```
+Or use `docker-compose`:
+
+```bash
 docker-compose up -d
 ```
 
@@ -20,25 +33,34 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 In the project directory, you can run:
 
+### `cypress open`
+
+Starts Cypress testing - component and end-to-end tests.
+
 ### `npm start`
 
-Runs the app in the development mode.<br />
+Runs the app in the development mode.
+
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-The page will reload if you make edits.<br />
+The page will reload if you make edits.
+
 You will also see any lint errors in the console.
 
 ### `npm test`
 
-Launches the test runner in the interactive watch mode.<br />
+Launches the test runner in the interactive watch mode.
+
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.<br />
+Builds the app for production to the `build` folder.
+
 It correctly bundles React in production mode and optimizes the build for the best performance.
 
-The build is minified and the filenames include the hashes.<br />
+The build is minified and the filenames include the hashes.
+
 Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
@@ -58,27 +80,3 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
-
-### Analyzing the Bundle Size
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
-
-### Making a Progressive Web App
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
-
-### Advanced Configuration
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
-
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `npm run build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify

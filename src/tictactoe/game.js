@@ -1,47 +1,52 @@
-import React, { useState } from 'react';
-import Container from '@material-ui/core/Container';
 import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
+import Container from '@material-ui/core/Container';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormGroup from '@material-ui/core/FormGroup';
+import TextField from '@material-ui/core/TextField';
+import Alert from '@material-ui/lab/Alert';
+import React, { useState } from 'react';
 
 import Board from './board.js';
 
 function GameForm(props) {
   return (
-    <form onSubmit={props.startGame} >
-      <TextField
-        name="p1"
-        label="Player 1 Name"
-        margin="normal"
-        fullWidth
-        onChange={props.handleFormChange}
-      />
-      <TextField
-        name="p2"
-        label="Player 2 Name"
-        margin="normal"
-        fullWidth
-        onChange={props.handleFormChange}
-      />
-    <FormGroup row>
-      <FormControlLabel
-        control={
-          <Checkbox checked={props.p1IsX} onChange={props.toggleXOrO} />
-        }
-        label="Player 1 is X"
-        color="secondary"
-      />
-    </FormGroup>
-    <FormGroup row>
-      <Button
-        type="submit" variant="contained"
-        color="primary" id="game-form-submit">
-        Start!
-      </Button>
-    </FormGroup>
-    </form>
+    <>
+      <h1>New Game</h1>
+      <form onSubmit={props.startGame} >
+        <TextField
+          name="p1"
+          label="Player 1 Name"
+          margin="normal"
+          fullWidth
+          onChange={props.handleFormChange}
+        />
+        <TextField
+          name="p2"
+          label="Player 2 Name"
+          margin="normal"
+          fullWidth
+          onChange={props.handleFormChange}
+        />
+        <FormGroup row>
+          <FormControlLabel
+            control={
+              <Checkbox data-testid='p1isx' checked={props.p1IsX} onChange={props.toggleXOrO} />
+            }
+            label="Player 1 is X"
+            color="secondary"
+          />
+        </FormGroup>
+        <FormGroup row>
+          <Button
+            type="submit" variant="contained"
+            color="primary" id="game-form-submit">
+            Start!
+          </Button>
+        </FormGroup>
+        { props.formError && <Alert severity="error" data-testid="form-error-alert">{props.formError}</Alert> }
+      </form>
+    </>
   );
 }
 
@@ -56,10 +61,21 @@ function Game(props) {
   const [p1IsX, setP1IsX] = useState(true);
   const [xIsNext, setXIsNext] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
+  const [formError, setFormError] = useState(null);
 
   const startGame = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (players.p1 == null || players.p2 == null || players.p1 === '' || players.p2 === '') {
+      setFormError('Please enter player names');
+      return;
+    }
+    else if (players.p1 === players.p2) {
+      setFormError('Player names must be unique');
+      return;
+    } else {
+      setFormError(null);
+    }
     setGameStarted(true);
     if (!p1IsX) {
       setXIsNext(false);
@@ -116,6 +132,7 @@ function Game(props) {
     const squares = current.squares.slice();
     const [x,y] = convertToCoords(i);
     if (calculateWinner(squares) != null || squares[i]) {
+      // do nothing if there is already a winner or the square is already filled
       return;
     }
     squares[i] = xIsNext ? 'X' : 'O';
@@ -141,9 +158,7 @@ function Game(props) {
 
   const sortHistoryOrder = () => {
     setHistory(history => {
-      let newOrder = history.slice(0, history.length);
-      newOrder.reverse();
-      return newOrder;
+      return history.slice().reverse();
     });
   }
 
@@ -166,7 +181,11 @@ function Game(props) {
 
   let status;
   if (win && win.winner != null) {
-    status = `The winner is ${win.winner}`;
+    let winner_name = players.p2;
+    if (win.winner === 'X' && p1IsX) {
+      winner_name = players.p1;
+    }
+    status = `The winner is ${winner_name} (${win.winner})`;
   } else if (win && win.winner == null) {
     status = "The game is a draw!";
   } else {
@@ -179,19 +198,13 @@ function Game(props) {
       `Go to move # ${move} (${x},${y})` :
       'Go to game start';
     const last = move === history.length - 1;
-    if (!last) {
-      return (
-        <li key={move}>
-          <Button onClick={() => jumpTo(move)}>{desc}</Button>
-        </li>
-      );
-    } else {
-      return (
-        <li key={move}>
-          <Button onClick={() => jumpTo(move)}><strong>{desc}</strong></Button>
-        </li>
-      )
-    }
+    return (
+      <li key={move}>
+        <Button onClick={() => jumpTo(move)}>
+          {last ? <strong>{desc}</strong> : desc}
+        </Button>
+      </li>
+    );
   });
 
   if (!gameStarted) {
@@ -203,6 +216,7 @@ function Game(props) {
         startGame={startGame}
         handleFormChange={handleFormChange}
         toggleXOrO={toggleXOrO}
+        formError={formError}
         />);
   } else {
     return (
@@ -215,9 +229,9 @@ function Game(props) {
             onClick = {handleClick}
             />
         </div>
-        <div className="App-info">
+        <div className="game-info">
           <div>
-            <Button onClick={sortHistoryOrder}>Sort history order</Button>
+            <Button onClick={sortHistoryOrder} data-testid="history-sort">Sort history order</Button>
             <Button onClick={restart}>New Game</Button>
           </div>
           <div>{status}</div>
@@ -229,6 +243,6 @@ function Game(props) {
 }
 
 export {
-  GameForm,
-  Game
-}
+  Game, GameForm
+};
+
