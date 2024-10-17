@@ -5,6 +5,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormGroup from '@material-ui/core/FormGroup';
 import TextField from '@material-ui/core/TextField';
 import Alert from '@material-ui/lab/Alert';
+import { ColorPicker } from 'material-ui-color';
 import React, { useState } from 'react';
 
 import Board from './board.js';
@@ -14,20 +15,34 @@ function GameForm(props) {
     <>
       <h1>New Game</h1>
       <form onSubmit={props.startGame} >
-        <TextField
-          name="p1"
-          label="Player 1 Name"
-          margin="normal"
-          fullWidth
-          onChange={props.handleFormChange}
-        />
-        <TextField
-          name="p2"
-          label="Player 2 Name"
-          margin="normal"
-          fullWidth
-          onChange={props.handleFormChange}
-        />
+        <FormGroup row style={{alignItems: 'end'}}>
+          <ColorPicker
+            value={props.players['p1']['color']}
+            onChange={(color) => {props.handleFormChange('#'+color.hex, 'p1', 'color')}}
+            />
+          <TextField
+            name="p1"
+            label="Player 1 Name"
+            margin="normal"
+            required
+            inputProps={{ 'data-testid': 'p1-name' }}
+            onChange={e => props.handleFormChange(e.target.value, 'p1', 'name')}
+          />
+        </FormGroup>
+        <FormGroup row style={{alignItems: 'end'}}>
+          <ColorPicker
+            value={props.players['p2']['color']}
+            onChange={(color) => {props.handleFormChange('#'+color.hex, 'p2', 'color')}}
+          />
+          <TextField
+            name="p2"
+            label="Player 2 Name"
+            margin="normal"
+            required
+            inputProps={{ 'data-testid': 'p2-name' }}
+            onChange={e => props.handleFormChange(e.target.value, 'p2', 'name')}
+          />
+        </FormGroup>
         <FormGroup row>
           <FormControlLabel
             control={
@@ -57,7 +72,10 @@ function Game(props) {
       move: [],
     }]);
   const [stepNumber, setStepNumber] = useState(0);
-  const [players, setPlayers] = useState({p1: null, p2: null});
+  const [players, setPlayers] = useState({
+    p1: {name: null, color: '#0000FF'},
+    p2: {name: null, color: '#FF0000'}
+  });
   const [p1IsX, setP1IsX] = useState(true);
   const [xIsNext, setXIsNext] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
@@ -66,11 +84,10 @@ function Game(props) {
   const startGame = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (players.p1 == null || players.p2 == null || players.p1 === '' || players.p2 === '') {
+    if (!players.p1 || !players.p2) {
       setFormError('Please enter player names');
       return;
-    }
-    else if (players.p1 === players.p2) {
+    } else if (players.p1.name === players.p2.name) {
       setFormError('Player names must be unique');
       return;
     } else {
@@ -156,14 +173,13 @@ function Game(props) {
     });
   }
 
-  const handleFormChange = (e) => {
-    e.persist();
+  const handleFormChange = (val, playerId, playerProperty) => {
     setPlayers((oldPlayers) => {
-      let newPlayer = {[e.target.name]: e.target.value};
-      return {
-        ...oldPlayers,
-        ...newPlayer
-    }});
+      let newPlayers = {...oldPlayers};
+      newPlayers[playerId][playerProperty] = val;
+      console.log(newPlayers);
+      return newPlayers;
+    });
   }
 
   const toggleXOrO = (e) => {
@@ -175,9 +191,9 @@ function Game(props) {
 
   let status;
   if (win && win.winner != null) {
-    let winner_name = players.p2;
+    let winner_name = players.p2.name;
     if (win.winner === 'X' && p1IsX) {
-      winner_name = players.p1;
+      winner_name = players.p1.name;
     }
     status = `The winner is ${winner_name} (${win.winner})`;
   } else if (win && win.winner == null) {
@@ -205,8 +221,7 @@ function Game(props) {
     return (
       <GameForm
         p1IsX={p1IsX}
-        p1={players.p1}
-        p2={players.p2}
+        players={players}
         startGame={startGame}
         handleFormChange={handleFormChange}
         toggleXOrO={toggleXOrO}
@@ -215,7 +230,9 @@ function Game(props) {
   } else {
     return (
       <Container maxWidth="sm">
-        <h1><span>{players.p1} vs {players.p2}</span></h1>
+        <h1>
+          <span style={{color: players.p1.color}}>{players.p1.name}</span> vs <span style={{color: players.p2.color}}>{players.p2.name}</span>
+        </h1>
         <div className="game-board">
           <Board
             squares = {current.squares}

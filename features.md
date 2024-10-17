@@ -20,8 +20,8 @@
 
 - ✅ entering player names
 - ✅ simple tic-tac-toe game
-- color coding by player
-- allow players to select their color
+- [ ] color coding by player
+- ✅ allow players to select their color
 
 ## Project Todos
 

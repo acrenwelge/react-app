@@ -4,31 +4,34 @@ describe('TIC TAC TOE GAME', () => {
   const p1testname = 'Alice'
   const p2testname = 'Bob'
   beforeEach(() => {
+    cy.clearCookies()
     localStorage.setItem('credentials', JSON.stringify({username: 'acrenwelge', pw: 'myrandompassword'}));
     cy.visit('http://localhost:3000/')
     cy.contains('Game').click()
   })
+  function enterNames() {
+    cy.get('[data-testid=p1-name]').first().type(p1testname)
+    cy.get('[data-testid=p2-name]').last().type(p2testname)
+  }
   it('should start the game after player names entered', () => {
-    cy.get('.MuiInputBase-input').first().type(p1testname)
-    cy.get('.MuiInputBase-input').last().type(p2testname)
+    enterNames()
     cy.get('[data-testid=p1isx]').click()
     cy.contains('Start').click()
   })
   it('should not start the game if player names are not entered', () => {
     cy.get('[data-testid=p1isx]').click()
     cy.contains('Start').click()
-    cy.get('[data-testid=form-error-alert]').should('exist')
+    cy.contains('New Game').should('exist')
   })
-  it('should not allow two players of the same name', () => {
-    cy.get('.MuiInputBase-input').first().type(p1testname)
-    cy.get('.MuiInputBase-input').last().type(p1testname)
+  it.only('should not allow two players of the same name', () => {
+    cy.get('[data-testid=p1-name]').first().type(p1testname)
+    cy.get('[data-testid=p2-name]').last().type(p1testname)
     cy.contains('Start').click()
     cy.get('[data-testid=form-error-alert]').should('exist')
   })
   context('with a started game', () => {
     beforeEach(() => {
-      cy.get('.MuiInputBase-input').first().type(p1testname)
-      cy.get('.MuiInputBase-input').last().type(p2testname)
+      enterNames()
       // player 1 is X, should already be checked by default
       cy.get('[data-testid=p1isx] input').should('be.checked')
       cy.contains('Start').click()
@@ -77,7 +80,7 @@ describe('TIC TAC TOE GAME', () => {
         cy.get('@hl2').should('have.class', 'hl')
         cy.get('@hl3').should('have.class', 'hl')
       })
-      it.only('should display a draw if no one wins', () => {
+      it('should display a draw if no one wins', () => {
         cy.get(`${game_board} > :nth-child(1) > :nth-child(1)`).click() // X plays
         cy.get(`${game_board} > :nth-child(1) > :nth-child(2)`).click() // O plays
         cy.get(`${game_board} > :nth-child(2) > :nth-child(1)`).click() // X plays

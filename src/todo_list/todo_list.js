@@ -123,7 +123,6 @@ function TodoList(props){
         });
         return newTodos;
       });
-      
     }
 
   let addItem = (item) => {
