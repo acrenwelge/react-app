@@ -9,3 +9,8 @@
 .priority-3 {
   background-color: rgb(250,220,110);
 }
+
+.item-done {
+  text-decoration: line-through;
+  pointer-events: none;
+}

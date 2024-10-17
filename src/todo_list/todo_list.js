@@ -1,17 +1,18 @@
-import { ListItem } from '@material-ui/core';
+import { ListItem, makeStyles } from '@material-ui/core';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormGroup from '@material-ui/core/FormGroup';
 import Input from '@material-ui/core/Input';
 import List from '@material-ui/core/List';
+import Modal from '@material-ui/core/Modal';
 import TextField from '@material-ui/core/TextField';
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import {
-    Redirect,
-    Route,
-    Switch,
-    useRouteMatch,
+  Redirect,
+  Route,
+  Switch,
+  useRouteMatch,
 } from 'react-router-dom';
 import TodoItemDetail from './todo_item_detail.js';
 import './todo_list.css';
@@ -30,6 +31,7 @@ const TodoItem = forwardRef((props, ref) => {
         <Input type="text"
           tabIndex={item.id * 3 + 1}
           value={item.text}
+          readOnly={item.completed}
           className={`${item.completed ? 'item-done' :''} priority-${item.priority}`}
           inputProps={{ className: `${item.completed ? 'item-done' :''}`}}
           ref={ref}
@@ -41,7 +43,7 @@ const TodoItem = forwardRef((props, ref) => {
           tabIndex={item.id * 3 + 2}
           value={item.priority || ''}
           inputProps={
-            {min: 0, max: 3}
+            {min: 1, max: 3}
           }
           onChange={(e) => props.onPriorityChange(e,item.id)}
           />
@@ -75,8 +77,23 @@ function TodoList(props){
   const [toItemDetail, updateToItemDetail] = useState(null);
   const [newItemAdded, setNewItemAdded] = useState(false);
   const [hideCompleted, setHideCompleted] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalStyle] = useState({'top': '50%', 'left': '50%', 'transform': 'translate(-50%, -50%)'});
   const lastElementRef = useRef(null);
   let match = useRouteMatch();
+
+  const modalStyles = makeStyles((theme) => ({
+    paper: {
+      position: 'absolute',
+      width: 400,
+      backgroundColor: theme.palette.background.paper,
+      border: '2px solid #000',
+      boxShadow: theme.shadows[5],
+      padding: theme.spacing(2, 4, 3),
+    },
+  }));
+
+  const classes = modalStyles();
 
   useEffect(() => {
     if (newItemAdded && lastElementRef.current) {
@@ -140,14 +157,13 @@ function TodoList(props){
 
   let priorityChange = (e, id) => {
     e.persist();
-    updateTodos(state => {
-      const priority = Number(e.target.value);
-      const newTodos = state.map((todo, idx) => {
+    const newPriority = Number(e.target.value);
+    if (newPriority < 0 || newPriority > 3) return;
+    updateTodos(todos => {
+      const newTodos = todos.map((todo) => {
         if (todo.id === id) {
           let changed = Object.assign({}, todo);
-          if (priority >= 0 && priority <= 3) {
-            changed.priority = priority;
-          }
+          changed.priority = newPriority;
           return changed;
         } else {
           return todo;
@@ -207,7 +223,7 @@ function TodoList(props){
   }
 
   let todoTextKeyInput = (e, id) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && e.target.value !== '') {
       if (e.shiftKey) {
         toggleCompleted(id);
       } else if (e.ctrlKey) {
@@ -244,6 +260,19 @@ function TodoList(props){
     <>
       <Box>
         <h1>My Todos</h1>
+      </Box>
+      <Box>
+        <Button onClick={() => setModalOpen(true)}>Keyboard Shortcuts</Button>
+        <Modal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          >
+            <div style={modalStyle} className={classes.paper}>
+              <code>SHIFT</code> + <code>ENTER</code> - toggle completed status<br/>
+              <code>CTRL</code> + <code>ENTER</code> - view item details<br/>
+              <code>ENTER</code> - add new item<br/>
+            </div>
+        </Modal>
       </Box>
       <Box>
         <List className='todo-list'>

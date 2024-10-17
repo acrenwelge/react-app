@@ -2,8 +2,8 @@
 
 ## TODO APP
 
-- tab focus changes when ENTER is hit
-- popup for keyboard shortcuts
+- ✅ tab focus changes when ENTER is hit
+- ✅ popup for keyboard shortcuts
 - ✅ toggle views
 - ✅ create a todo by typing in the text field
 - ✅ update a Todo by clicking or tabbing to it and editing

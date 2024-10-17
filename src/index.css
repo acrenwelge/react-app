@@ -22,7 +22,3 @@ header div {
 .square.hl {
   background-color: yellow;
 }
-
-.item-done {
-  text-decoration: line-through;
-}
