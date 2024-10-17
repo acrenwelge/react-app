@@ -15,7 +15,7 @@
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-router-dom": "^5.1.2",
-    "react-scripts": "3.2.0",
+    "react-scripts": "5.0.1",
     "material-ui-popup-state": "^1.7.1",
     "prop-types": "^15.7.2"
   },
