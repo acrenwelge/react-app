@@ -5,11 +5,19 @@ import Square from './square.js';
 export default class Board extends React.Component {
 
   renderSquare(i, highlight) {
+    console.log(this.props.players);
+    console.log(this.props.p1IsX);
+    let textColor = this.props.players.p2.color;
+    if ((this.props.p1IsX && this.props.squares[i] === 'X')
+      || (!this.props.p1IsX && this.props.squares[i] === 'O')) {
+      textColor = this.props.players.p1.color;
+    }
     return (
       <Square
       key={i}
       value={this.props.squares[i]}
       highlight={highlight}
+      textColor={textColor}
       onClick={() => this.props.onClick(i)}/>
       )
   }

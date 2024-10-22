@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {
-    Redirect,
-    Route,
-    BrowserRouter as Router,
-    Switch
+  Redirect,
+  Route,
+  BrowserRouter as Router,
+  Switch
 } from "react-router-dom";
 import auth from './auth.ts';
 import './index.css';
@@ -12,7 +12,7 @@ import LoginPage from './login_page.js';
 import NotFound from './not_found.js';
 import PageContent from './page_content.js';
 import { Game } from './tictactoe/game.js';
-import TodoList from './todo_list/todo_list.js';
+import TodoList from './todo_list/todo_list.tsx';
 
 function PrivateRoute({ children, ...rest }) {
   return (

@@ -177,7 +177,6 @@ function Game(props) {
     setPlayers((oldPlayers) => {
       let newPlayers = {...oldPlayers};
       newPlayers[playerId][playerProperty] = val;
-      console.log(newPlayers);
       return newPlayers;
     });
   }
@@ -237,6 +236,8 @@ function Game(props) {
           <Board
             squares = {current.squares}
             winObj = {win}
+            p1IsX={p1IsX}
+            players={players}
             onClick = {handleClick}
             />
         </div>

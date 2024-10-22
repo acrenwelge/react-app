@@ -7,7 +7,7 @@ export default function Square(props) {
     cn="square hl";
   }
   return (
-    <button className={cn} onClick={props.onClick}>
+    <button className={cn} onClick={props.onClick} style={{color: props.textColor}}>
       {props.value}
     </button>
   );

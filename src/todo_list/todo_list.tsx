@@ -14,17 +14,25 @@ import {
   Switch,
   useRouteMatch,
 } from 'react-router-dom';
-import TodoItemDetail from './todo_item_detail.js';
+import TodoItemDetail, { Item } from './todo_item_detail';
 import './todo_list.css';
 
-const TodoItem = forwardRef((props, ref) => {
-  const item = props.item;
+interface TodoItemProps {
+  item: Item;
+  onToggle: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>, id: number) => void;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>, id: number) => void;
+  onPriorityChange: (event: React.ChangeEvent<HTMLInputElement>, id: number) => void;
+}
+
+const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
+  const { item, onToggle, onKeyDown, onChange, onPriorityChange } = props;
 
   return (
     <ListItem>
       <FormGroup row>
         <Checkbox checked={item.completed}
-          onChange={props.onToggle}
+          onChange={onToggle}
           value={item.id}
           tabIndex={item.id * 3}
           />
@@ -35,25 +43,27 @@ const TodoItem = forwardRef((props, ref) => {
           className={`${item.completed ? 'item-done' :''} priority-${item.priority}`}
           inputProps={{ className: `${item.completed ? 'item-done' :''}`}}
           ref={ref}
-          onKeyDown={(e) => props.onKeyDown(e, item.id)}
-          onChange={(e) => props.onChange(e, item.id)}
+          onKeyDown={(e) => onKeyDown(e as React.KeyboardEvent<HTMLInputElement>, item.id)}
+          onChange={(e) => onChange(e as React.ChangeEvent<HTMLInputElement>, item.id)}
           />
         <TextField type="number"
           label="priority"
           tabIndex={item.id * 3 + 2}
-          value={item.priority || ''}
+          value={item.priority ?? ''}
           inputProps={
             {min: 1, max: 3}
           }
-          onChange={(e) => props.onPriorityChange(e,item.id)}
+          onChange={(e) => onPriorityChange(e as React.ChangeEvent<HTMLInputElement>,item.id)}
           />
       </FormGroup>
     </ListItem>
   )
 })
 
-function TodoList(props){
-  const [todos, updateTodos] = useState(
+interface TodoListProps {}
+
+function TodoList(props: TodoListProps){
+  const [todos, updateTodos] = useState<Item[]>(
     [
       {
         id: 1,
@@ -74,12 +84,12 @@ function TodoList(props){
         priority: 3,
       }]
     );
-  const [toItemDetail, updateToItemDetail] = useState(null);
+  const [toItemDetail, updateToItemDetail] = useState<number | null>(null);
   const [newItemAdded, setNewItemAdded] = useState(false);
   const [hideCompleted, setHideCompleted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalStyle] = useState({'top': '50%', 'left': '50%', 'transform': 'translate(-50%, -50%)'});
-  const lastElementRef = useRef(null);
+  const lastElementRef: React.MutableRefObject<HTMLInputElement | null> = useRef(null);
   let match = useRouteMatch();
 
   const modalStyles = makeStyles((theme) => ({
@@ -110,14 +120,14 @@ function TodoList(props){
     return maxId;
   }
 
-  let addItemBtnClick = (e) => {
+  let addItemBtnClick = (e: React.MouseEvent) => {
       e.persist();
       updateTodos(state => {
-        let newTodos = state.slice(0,state.length);
+        let newTodos: Item[] = state.slice(0,state.length);
         let maxId = getMaxId();
         newTodos.push({
           id: maxId + 1,
-          text: e.target.value,
+          text: (e.target as HTMLInputElement).value,
           completed: false,
           priority: null,
         });
@@ -125,9 +135,9 @@ function TodoList(props){
       });
     }
 
-  let addItem = (item) => {
-      updateTodos(state => {
-        let newTodos = state.slice(0,state.length);
+  let addItem = (item: Item) => {
+      updateTodos((state) => {
+        let newTodos: Item[] = state.slice(0,state.length);
         newTodos.push({
           id: item.id,
           text: item.text,
@@ -139,7 +149,7 @@ function TodoList(props){
       });
     }
 
-  let sortByPriority = (e) => {
+  let sortByPriority = (e: React.MouseEvent) => {
     updateTodos(state => {
       let newOrder = state.slice(0,state.length);
       newOrder.sort((one, two) => {
@@ -154,7 +164,7 @@ function TodoList(props){
     })
   }
 
-  let priorityChange = (e, id) => {
+  let priorityChange = (e: React.ChangeEvent<HTMLInputElement>, id: number) => {
     e.persist();
     const newPriority = Number(e.target.value);
     if (newPriority < 0 || newPriority > 3) return;
@@ -172,14 +182,14 @@ function TodoList(props){
     })
   }
 
-  let removeCompleted = (e) => {
+  let removeCompleted = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.persist();
     updateTodos(state => {
       return todos.filter(todo => {return !todo.completed});
     })
   }
 
-  let editItem = (e, id) => {
+  let editItem = (e: React.ChangeEvent<HTMLInputElement>, id: number) => {
     e.persist();
     updateTodos(state => {
       for (let i=0; i < todos.length; i++) {
@@ -196,10 +206,11 @@ function TodoList(props){
           return firstHalf.concat([newItem]).concat(secondHalf);
         }
       }
+      return state;
     });
   }
 
-  let toggleCompleted = (id) => {
+  let toggleCompleted = (id: number) => {
     updateTodos(state => {
       const newList = todos.map((el, idx) => {
         if (el.id === Number(id)) {
@@ -216,13 +227,13 @@ function TodoList(props){
     });
   }
 
-  let toggleCompletedEvent = (e) => {
-    const id = e.target.value;
+  let toggleCompletedEvent = (e: React.ChangeEvent) => {
+    const id = Number((e.target as HTMLInputElement).value);
     toggleCompleted(id);
   }
 
-  let todoTextKeyInput = (e, id) => {
-    if (e.key === "Enter" && e.target.value !== '') {
+  let todoTextKeyInput = (e: React.KeyboardEvent<HTMLInputElement>, id: number) => {
+    if (e.key === "Enter" && (e.target as HTMLInputElement).value !== '') {
       if (e.shiftKey) {
         toggleCompleted(id);
       } else if (e.ctrlKey) {
@@ -231,7 +242,8 @@ function TodoList(props){
         addItem({
           id: getMaxId() + 1,
           text: '',
-          completed: false
+          completed: false,
+          priority: null
         });
       }
     }
@@ -245,7 +257,6 @@ function TodoList(props){
       <TodoItem
         item={entry}
         key={entry.id}
-        id={entry.id}
         ref={idx === todos.length - 1 ? lastElementRef : null}
         onChange={editItem}
         onToggle={toggleCompletedEvent}
