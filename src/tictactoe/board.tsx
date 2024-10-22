@@ -1,23 +1,31 @@
 import React from 'react';
 import './board.css';
-import Square from './square.js';
+import Square from './square';
 
-export default class Board extends React.Component {
+interface BoardProps {
+  squares: string[];
+  onClick: (i: number) => void;
+  winObj: any;
+  players: any;
+  p1IsX: boolean;
+}
 
-  renderSquare(i, highlight) {
+export default class Board extends React.Component<BoardProps> {
+
+  renderSquare(i: number, highlight: boolean) {
     console.log(this.props.players);
     console.log(this.props.p1IsX);
-    let textColor = this.props.players.p2.color;
+    let textHexColor = this.props.players.p2.color;
     if ((this.props.p1IsX && this.props.squares[i] === 'X')
       || (!this.props.p1IsX && this.props.squares[i] === 'O')) {
-      textColor = this.props.players.p1.color;
+      textHexColor = this.props.players.p1.color;
     }
     return (
       <Square
       key={i}
       value={this.props.squares[i]}
       highlight={highlight}
-      textColor={textColor}
+      textHexColor={textHexColor}
       onClick={() => this.props.onClick(i)}/>
       )
   }

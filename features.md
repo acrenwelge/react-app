@@ -42,7 +42,7 @@
 ## Project Todos
 
 - ✅ add a CI pipeline
-- add TypeScript
+- ✅ add TypeScript
 
 ## Bugs Fixed
 

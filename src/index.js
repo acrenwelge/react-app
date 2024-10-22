@@ -11,8 +11,8 @@ import './index.css';
 import LoginPage from './login_page.js';
 import NotFound from './not_found.js';
 import PageContent from './page_content.js';
-import { Game } from './tictactoe/game.js';
-import TodoList from './todo_list/todo_list.tsx';
+import { Game } from './tictactoe/game';
+import TodoList from './todo_list/todo_list';
 
 function PrivateRoute({ children, ...rest }) {
   return (

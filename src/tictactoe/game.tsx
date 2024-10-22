@@ -8,9 +8,18 @@ import Alert from '@material-ui/lab/Alert';
 import { ColorPicker } from 'material-ui-color';
 import React, { useState } from 'react';
 
-import Board from './board.js';
+import Board from './board';
 
-function GameForm(props) {
+interface GameFormProps {
+  p1IsX: boolean;
+  players: Players;
+  startGame: (e: React.FormEvent) => void;
+  handleFormChange: (val: string, playerId: keyof Players, playerProperty: keyof Players['p1']) => void;
+  toggleXOrO: (e: React.ChangeEvent) => void;
+  formError: string | null;
+}
+
+function GameForm(props: GameFormProps) {
   return (
     <>
       <h1>New Game</h1>
@@ -65,23 +74,33 @@ function GameForm(props) {
   );
 }
 
-function Game(props) {
-  const [history, setHistory] = useState([
+interface History {
+  squares: string[];
+  move: number[];
+}
+
+interface Players {
+  p1: {name?: string, color: string};
+  p2: {name?: string, color: string};
+}
+
+function Game() {
+  const [history, setHistory] = useState<History[]>([
     {
       squares: Array(9).fill(null),
       move: [],
     }]);
   const [stepNumber, setStepNumber] = useState(0);
-  const [players, setPlayers] = useState({
-    p1: {name: null, color: '#0000FF'},
-    p2: {name: null, color: '#FF0000'}
+  const [players, setPlayers] = useState<Players>({
+    p1: {color: '#0000FF'},
+    p2: {color: '#FF0000'}
   });
   const [p1IsX, setP1IsX] = useState(true);
   const [xIsNext, setXIsNext] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
-  const [formError, setFormError] = useState(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const startGame = (e) => {
+  const startGame = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!players.p1 || !players.p2) {
@@ -99,7 +118,7 @@ function Game(props) {
     }
   }
 
-  const restart = (e) => {
+  const restart = (e: React.MouseEvent) => {
     setGameStarted(false);
     setHistory([{
       squares: Array(9).fill(null),
@@ -110,13 +129,13 @@ function Game(props) {
   }
 
   // converting index of the square to [x,y] coordinates on the tic-tac-toe board
-  const convertToCoords = (i) => {
+  const convertToCoords = (i: number) => {
     let x = i % 3;
     let y = Math.floor(i/3);
     return [x,y];
   }
 
-  const calculateWinner = (squares) => {
+  const calculateWinner = (squares: string[]) => {
     const lines = [
       [0, 1, 2],
       [3, 4, 5],
@@ -136,7 +155,7 @@ function Game(props) {
         }
       }
     }
-    if (!squares.includes(null)) {
+    if (!squares.includes(null as any)) {
       return {
         winner: null // draw!
       }
@@ -144,7 +163,7 @@ function Game(props) {
     return null;
   }
 
-  const handleClick = (i) => {
+  const handleClick = (i: number) => {
     const current = history[stepNumber];
     const squares = current.squares.slice();
     const [x,y] = convertToCoords(i);
@@ -153,7 +172,7 @@ function Game(props) {
       return;
     }
     squares[i] = xIsNext ? 'X' : 'O';
-    setHistory((history, props) => {
+    setHistory((history) => {
         return history.concat(
           {
             squares: squares,
@@ -164,7 +183,7 @@ function Game(props) {
     setXIsNext(prev => !prev);
   }
 
-  const jumpTo = (step) => {
+  const jumpTo = (step: number) => {
     setStepNumber(step);
     setHistory(history => history.slice(0, step + 1));
     setXIsNext((old) => {
@@ -173,7 +192,7 @@ function Game(props) {
     });
   }
 
-  const handleFormChange = (val, playerId, playerProperty) => {
+  const handleFormChange = (val: string, playerId: keyof Players, playerProperty: keyof Players['p1']) => {
     setPlayers((oldPlayers) => {
       let newPlayers = {...oldPlayers};
       newPlayers[playerId][playerProperty] = val;
@@ -181,7 +200,7 @@ function Game(props) {
     });
   }
 
-  const toggleXOrO = (e) => {
+  const toggleXOrO = (e: React.ChangeEvent) => {
     setP1IsX(old => !old);
   }
 
