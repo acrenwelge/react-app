@@ -15,7 +15,7 @@
 - ✅ sorting by priority
 - ✅ CTRL + ENTER brings up todo details
 - ✅ login page with dummy credentials
-- due dates
+- ✅ due dates
 - editable todo details page
 - tags for todos
 - search for todos
@@ -23,6 +23,7 @@
 - filter by due date
 - filter by tags
 - recurring todos
+- select app theme
 - backend: REST API
 - backend: SQL database
 
@@ -43,6 +44,7 @@
 
 - ✅ add a CI pipeline
 - ✅ add TypeScript
+- ✅ json-server for testing
 
 ## Bugs Fixed
 

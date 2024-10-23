@@ -14,8 +14,7 @@ import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import {
   Redirect,
   Route,
-  Switch,
-  useRouteMatch,
+  Switch, useLocation, useRouteMatch
 } from 'react-router-dom';
 import TodoItemDetail, { Item } from './todo_item_detail';
 import './todo_list.css';
@@ -40,6 +39,7 @@ const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
           tabIndex={item.id * 3}
           />
         <Input type="text"
+          multiline
           tabIndex={item.id * 3 + 1}
           value={item.text}
           readOnly={item.completed}
@@ -59,7 +59,8 @@ const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
           onChange={(e) => onPriorityChange(e as React.ChangeEvent<HTMLInputElement>,item.id)}
           />
         <DatePicker
-          value={item.dueDate}
+          label="Due Date"
+          value={item.dueDate || null}
           onChange={(date) => console.log(date)}
           />
       </FormGroup>
@@ -67,31 +68,18 @@ const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
   )
 })
 
+export interface ItemAPI {
+  id: string;
+  text: string;
+  completed: boolean;
+  priority: number | null;
+  dueDate?: string;
+}
+
 interface TodoListProps {}
 
 function TodoList(props: TodoListProps){
-  const [todos, updateTodos] = useState<Item[]>(
-    [
-      {
-        id: 1,
-        text: 'Do some testing',
-        completed: false,
-        priority: 2,
-        dueDate: dayjs(),
-      },
-      {
-        id: 2,
-        text: 'Write a React app',
-        completed: true,
-        priority: 1,
-      },
-      {
-        id: 3,
-        text: 'Get a job!',
-        completed: false,
-        priority: 3,
-      }]
-    );
+  const [todos, updateTodos] = useState<Item[]>([]);
   const [toItemDetail, updateToItemDetail] = useState<number | null>(null);
   const [newItemAdded, setNewItemAdded] = useState(false);
   const [hideCompleted, setHideCompleted] = useState(false);
@@ -105,6 +93,24 @@ function TodoList(props: TodoListProps){
       setNewItemAdded(false);
     }
   }, [newItemAdded]);
+
+  useEffect(() => {
+    const fetchTodos = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/todos');
+        const rawTodos = await response.json();
+        const parsedTodos: Item[] = rawTodos.map((todo: ItemAPI) => ({
+          ...todo,
+          id: Number(todo.id),
+          dueDate: todo.dueDate ? dayjs(todo.dueDate) : undefined,
+        }));
+        updateTodos(parsedTodos);
+      } catch (error) {
+        console.error('Error fetching todos:', error);
+      }
+    };
+    fetchTodos();
+  }, []); // Empty dependency array, runs once on mount
 
   let getMaxId = () => {
     let maxId = 0;
@@ -205,17 +211,15 @@ function TodoList(props: TodoListProps){
   }
 
   let toggleCompleted = (id: number) => {
-    updateTodos(state => {
-      const newList = todos.map((el, idx) => {
-        if (el.id === Number(id)) {
+    updateTodos(oldTodos => {
+      const newList = oldTodos.map((td, idx) => {
+        if (td.id === id) {
           return {
-            id: Number(id),
-            text: el.text,
-            completed: !el.completed,
-            priority: el.priority,
+            ...td,
+            completed: !td.completed,
           }
         }
-        return el;
+        return td;
       });
       return newList;
     });
@@ -229,10 +233,13 @@ function TodoList(props: TodoListProps){
   let todoTextKeyInput = (e: React.KeyboardEvent<HTMLInputElement>, id: number) => {
     if (e.key === "Enter" && (e.target as HTMLInputElement).value !== '') {
       if (e.shiftKey) {
+        e.preventDefault();
         toggleCompleted(id);
       } else if (e.ctrlKey) {
+        e.preventDefault();
         updateToItemDetail(id);
       } else {
+        e.preventDefault();
         addItem({
           id: getMaxId() + 1,
           text: '',
@@ -242,6 +249,15 @@ function TodoList(props: TodoListProps){
       }
     }
   };
+
+  const location = useLocation();
+
+  useEffect(() => {
+    // Reset state when the route changes to a certain path
+    if (location.pathname === "/todos") {
+      updateToItemDetail(null);
+    }
+  }, [location]);
 
   const items = todos.map((entry, idx) => {
     if (hideCompleted && entry.completed) {
@@ -277,7 +293,11 @@ function TodoList(props: TodoListProps){
       <Box>
         <Button onClick={() => setModalOpen(true)}>Keyboard Shortcuts</Button>
         <Modal
-          sx={{'top': '50%', 'left': '50%', 'transform': 'translate(-50%, -50%)'}}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           >

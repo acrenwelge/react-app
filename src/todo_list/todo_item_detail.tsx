@@ -35,6 +35,9 @@ function TodoItemDetail(props: TodoItemDetailProps) {
       <div>
         <Link to={`/todos/${paramId+1}`}>Next Item</Link>
       </div>
+      <div>
+        <Link to="/todos">All Todo Items</Link>
+      </div>
       <h2>Task Details</h2>
       <FormGroup row>
         <TextField
