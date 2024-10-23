@@ -1,8 +1,9 @@
+// TODO: implement a real authentication system
 function foo() {
   let isAuthenticated = false;
 
   return {
-    isAuthenticated: () => isAuthenticated,
+    isAuthenticated: () => true,
     checkCreds: (username: string, password: string) => {
       const creds = {
         username: 'acrenwelge',

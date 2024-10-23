@@ -1,12 +1,15 @@
-import { ListItem, makeStyles } from '@material-ui/core';
-import Box from '@material-ui/core/Box';
-import Button from '@material-ui/core/Button';
-import Checkbox from '@material-ui/core/Checkbox';
-import FormGroup from '@material-ui/core/FormGroup';
-import Input from '@material-ui/core/Input';
-import List from '@material-ui/core/List';
-import Modal from '@material-ui/core/Modal';
-import TextField from '@material-ui/core/TextField';
+import { ListItem } from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import FormGroup from '@mui/material/FormGroup';
+import Input from '@mui/material/Input';
+import List from '@mui/material/List';
+import Modal from '@mui/material/Modal';
+import { styled } from '@mui/material/styles';
+import TextField from '@mui/material/TextField';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import {
   Redirect,
@@ -55,6 +58,10 @@ const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
           }
           onChange={(e) => onPriorityChange(e as React.ChangeEvent<HTMLInputElement>,item.id)}
           />
+        <DatePicker
+          value={item.dueDate}
+          onChange={(date) => console.log(date)}
+          />
       </FormGroup>
     </ListItem>
   )
@@ -69,7 +76,8 @@ function TodoList(props: TodoListProps){
         id: 1,
         text: 'Do some testing',
         completed: false,
-        priority: 2
+        priority: 2,
+        dueDate: dayjs(),
       },
       {
         id: 2,
@@ -88,22 +96,8 @@ function TodoList(props: TodoListProps){
   const [newItemAdded, setNewItemAdded] = useState(false);
   const [hideCompleted, setHideCompleted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalStyle] = useState({'top': '50%', 'left': '50%', 'transform': 'translate(-50%, -50%)'});
   const lastElementRef: React.MutableRefObject<HTMLInputElement | null> = useRef(null);
   let match = useRouteMatch();
-
-  const modalStyles = makeStyles((theme) => ({
-    paper: {
-      position: 'absolute',
-      width: 400,
-      backgroundColor: theme.palette.background.paper,
-      border: '2px solid #000',
-      boxShadow: theme.shadows[5],
-      padding: theme.spacing(2, 4, 3),
-    },
-  }));
-
-  const classes = modalStyles();
 
   useEffect(() => {
     if (newItemAdded && lastElementRef.current) {
@@ -266,6 +260,15 @@ function TodoList(props: TodoListProps){
     )
   });
 
+  const PaperDiv = styled('div')(({theme}) => ({
+    position: 'absolute',
+    width: 400,
+    backgroundColor: theme.palette.background.paper,
+    border: '2px solid #000',
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing(2, 4, 3),
+  }));
+
   const listView = (
     <>
       <Box>
@@ -274,14 +277,15 @@ function TodoList(props: TodoListProps){
       <Box>
         <Button onClick={() => setModalOpen(true)}>Keyboard Shortcuts</Button>
         <Modal
+          sx={{'top': '50%', 'left': '50%', 'transform': 'translate(-50%, -50%)'}}
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           >
-            <div style={modalStyle} className={classes.paper}>
+            <PaperDiv>
               <code>SHIFT</code> + <code>ENTER</code> - toggle completed status<br/>
               <code>CTRL</code> + <code>ENTER</code> - view item details<br/>
               <code>ENTER</code> - add new item<br/>
-            </div>
+            </PaperDiv>
         </Modal>
       </Box>
       <Box>
@@ -299,7 +303,7 @@ function TodoList(props: TodoListProps){
         </Button>
         <Button
           data-testid="toggle-hide-completed"
-          color="default"
+          color="info"
           onClick={() => setHideCompleted(!hideCompleted)}
           >
           {hideCompleted ? 'Show' : 'Hide'} Completed

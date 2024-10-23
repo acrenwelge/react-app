@@ -1,3 +1,10 @@
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {
@@ -12,9 +19,23 @@ import LoginPage from './login_page.js';
 import NotFound from './not_found.js';
 import PageContent from './page_content.js';
 import { Game } from './tictactoe/game';
+import TodoItemDetail from './todo_list/todo_item_detail';
 import TodoList from './todo_list/todo_list';
 
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#2196f3",
+    },
+    secondary: {
+      main: '#f44336',
+    },
+  },
+});
+
+
 function PrivateRoute({ children, ...rest }) {
+  console.log('PrivateRoute => authenticated? ', auth.isAuthenticated());
   return (
     <Route
       {...rest}
@@ -64,6 +85,7 @@ export default function App() {
         <PrivateRoute path="/todos">
           {TodoListPage }
         </PrivateRoute>
+        <PrivateRoute path="/todos/:id" component={TodoItemDetail} />
         <PrivateRoute path="/game">
           {GamePage }
         </PrivateRoute>
@@ -80,6 +102,10 @@ export default function App() {
 // ========================================
 
 ReactDOM.render(
-  <App />,
+  <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <ThemeProvider theme={theme}>
+      <App />
+    </ThemeProvider>
+  </LocalizationProvider>,
   document.getElementById('root')
 );

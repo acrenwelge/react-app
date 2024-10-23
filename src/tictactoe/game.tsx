@@ -1,10 +1,10 @@
-import Button from '@material-ui/core/Button';
-import Checkbox from '@material-ui/core/Checkbox';
-import Container from '@material-ui/core/Container';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormGroup from '@material-ui/core/FormGroup';
-import TextField from '@material-ui/core/TextField';
-import Alert from '@material-ui/lab/Alert';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import Container from '@mui/material/Container';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormGroup from '@mui/material/FormGroup';
+import TextField from '@mui/material/TextField';
 import { ColorPicker } from 'material-ui-color';
 import React, { useState } from 'react';
 
@@ -25,10 +25,6 @@ function GameForm(props: GameFormProps) {
       <h1>New Game</h1>
       <form onSubmit={props.startGame} >
         <FormGroup row style={{alignItems: 'end'}}>
-          <ColorPicker
-            value={props.players['p1']['color']}
-            onChange={(color) => {props.handleFormChange('#'+color.hex, 'p1', 'color')}}
-            />
           <TextField
             name="p1"
             label="Player 1 Name"
@@ -37,12 +33,12 @@ function GameForm(props: GameFormProps) {
             inputProps={{ 'data-testid': 'p1-name' }}
             onChange={e => props.handleFormChange(e.target.value, 'p1', 'name')}
           />
+          <ColorPicker
+            value={props.players['p1']['color']}
+            onChange={(color) => {props.handleFormChange('#'+color.hex, 'p1', 'color')}}
+            />
         </FormGroup>
         <FormGroup row style={{alignItems: 'end'}}>
-          <ColorPicker
-            value={props.players['p2']['color']}
-            onChange={(color) => {props.handleFormChange('#'+color.hex, 'p2', 'color')}}
-          />
           <TextField
             name="p2"
             label="Player 2 Name"
@@ -50,6 +46,10 @@ function GameForm(props: GameFormProps) {
             required
             inputProps={{ 'data-testid': 'p2-name' }}
             onChange={e => props.handleFormChange(e.target.value, 'p2', 'name')}
+          />
+          <ColorPicker
+            value={props.players['p2']['color']}
+            onChange={(color) => {props.handleFormChange('#'+color.hex, 'p2', 'color')}}
           />
         </FormGroup>
         <FormGroup row>

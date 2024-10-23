@@ -26,6 +26,7 @@ export default function LoginPage(props) {
     console.warn('No credentials found');
   }
   if ((username && auth.checkCreds(username, pw)) || doRedirect) {
+    console.log('Redirecting to /home from login page');
     return <Redirect to="/home" />
   }
 
