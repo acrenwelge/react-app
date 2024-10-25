@@ -1,15 +1,7 @@
 import { Alert, Chip, FormGroup, TextField } from '@mui/material';
-import dayjs from 'dayjs';
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
-
-export interface Item {
-  id: number;
-  text: string;
-  completed: boolean;
-  priority: number | null;
-  dueDate?: dayjs.Dayjs;
-}
+import { Item } from './todo_item';
 
 interface TodoItemDetailProps {
   todos: Item[];

@@ -1,78 +1,27 @@
-import { ListItem } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import FormGroup from '@mui/material/FormGroup';
-import Input from '@mui/material/Input';
 import List from '@mui/material/List';
 import Modal from '@mui/material/Modal';
 import { styled } from '@mui/material/styles';
-import TextField from '@mui/material/TextField';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
-import React, { forwardRef, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Redirect,
   Route,
   Switch, useLocation, useRouteMatch
 } from 'react-router-dom';
-import TodoItemDetail, { Item } from './todo_item_detail';
+import { baseURL } from '..';
+import TodoItem, { Item } from './todo_item';
+import TodoItemDetail from './todo_item_detail';
 import './todo_list.css';
 
-interface TodoItemProps {
-  item: Item;
-  onToggle: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>, id: number) => void;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>, id: number) => void;
-  onPriorityChange: (event: React.ChangeEvent<HTMLInputElement>, id: number) => void;
-}
+// Code will attempt to update server with changes every TIMEOUT seconds
+// OR when the number of batched 'todos' updated equals BATCH_SIZE
+const BATCH_SIZE = 5;
+const TIMEOUT = 5;
 
-const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
-  const { item, onToggle, onKeyDown, onChange, onPriorityChange } = props;
-
-  return (
-    <ListItem>
-      <FormGroup row>
-        <Checkbox checked={item.completed}
-          onChange={onToggle}
-          value={item.id}
-          tabIndex={item.id * 3}
-          />
-        <Input type="text"
-          multiline
-          tabIndex={item.id * 3 + 1}
-          value={item.text}
-          readOnly={item.completed}
-          className={`${item.completed ? 'item-done' :''} priority-${item.priority}`}
-          inputProps={{ className: `${item.completed ? 'item-done' :''}`}}
-          ref={ref}
-          onKeyDown={(e) => onKeyDown(e as React.KeyboardEvent<HTMLInputElement>, item.id)}
-          onChange={(e) => onChange(e as React.ChangeEvent<HTMLInputElement>, item.id)}
-          />
-        <TextField type="number"
-          label="priority"
-          tabIndex={item.id * 3 + 2}
-          value={item.priority ?? ''}
-          inputProps={
-            {min: 1, max: 3}
-          }
-          onChange={(e) => onPriorityChange(e as React.ChangeEvent<HTMLInputElement>,item.id)}
-          />
-        <DatePicker
-          label="Due Date"
-          value={item.dueDate || null}
-          onChange={(date) => console.log(date)}
-          />
-      </FormGroup>
-    </ListItem>
-  )
-})
-
-export interface ItemAPI {
-  id: string;
-  text: string;
-  completed: boolean;
-  priority: number | null;
+export interface ItemAPI extends Omit<Item, 'id' | 'dueDate'> {
+  id?: string;
   dueDate?: string;
 }
 
@@ -81,7 +30,7 @@ interface TodoListProps {}
 function TodoList(props: TodoListProps){
   const [todos, updateTodos] = useState<Item[]>([]);
   const [toItemDetail, updateToItemDetail] = useState<number | null>(null);
-  const [newItemAdded, setNewItemAdded] = useState(false);
+  const [newItemAdded, setNewItemAdded] = useState(false); // Used to focus on the new item
   const [hideCompleted, setHideCompleted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const lastElementRef: React.MutableRefObject<HTMLInputElement | null> = useRef(null);
@@ -97,7 +46,7 @@ function TodoList(props: TodoListProps){
   useEffect(() => {
     const fetchTodos = async () => {
       try {
-        const response = await fetch('http://localhost:3001/todos');
+        const response = await fetch(`${baseURL}/todos`);
         const rawTodos = await response.json();
         const parsedTodos: Item[] = rawTodos.map((todo: ItemAPI) => ({
           ...todo,
@@ -122,30 +71,22 @@ function TodoList(props: TodoListProps){
 
   let addItemBtnClick = (e: React.MouseEvent) => {
       e.persist();
-      updateTodos(state => {
-        let newTodos: Item[] = state.slice(0,state.length);
-        let maxId = getMaxId();
-        newTodos.push({
-          id: maxId + 1,
-          text: (e.target as HTMLInputElement).value,
-          completed: false,
-          priority: null,
-        });
-        return newTodos;
-      });
+      addItem(getNewBlankItem());
     }
 
   let addItem = (item: Item) => {
-      updateTodos((state) => {
-        let newTodos: Item[] = state.slice(0,state.length);
-        newTodos.push({
-          id: item.id,
-          text: item.text,
-          completed: item.completed,
-          priority: item.priority,
+      updateTodos((oldTodoList) => {
+        let newTodoList: Item[] = oldTodoList.slice();
+        const newBatchedTodoItem: BatchedTodo = {
+          ...item,
+          operation_type: OperationType.Add
+        };
+        setBatchedTodos((batch) => {
+          return batch.concat(newBatchedTodoItem);
         });
+        newTodoList.push(item);
         setNewItemAdded(true);
-        return newTodos;
+        return newTodoList;
       });
     }
 
@@ -168,12 +109,26 @@ function TodoList(props: TodoListProps){
     e.persist();
     const newPriority = Number(e.target.value);
     if (newPriority < 0 || newPriority > 3) return;
+    const todoItem = todos.find(todo => todo.id === id);
+    setBatchedTodos((batch) => {
+      const batchTodo = batch.find(todo => todo.id === id);
+      if (batchTodo) {
+        batchTodo.priority = newPriority;
+      } else if (todoItem) {
+        return batch.concat({
+          ...todoItem,
+          operation_type: OperationType.Update
+        });
+      }
+      return batch;
+    });
     updateTodos(todos => {
       const newTodos = todos.map((todo) => {
         if (todo.id === id) {
-          let changed = Object.assign({}, todo);
-          changed.priority = newPriority;
-          return changed;
+          return {
+            ...todo,
+            priority: newPriority
+          }
         } else {
           return todo;
         }
@@ -184,29 +139,80 @@ function TodoList(props: TodoListProps){
 
   let removeCompleted = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.persist();
+    setBatchedTodos((batch) => {
+      const completedTodos = todos.filter(todo => todo.completed);
+      const completedIds = completedTodos.map(todo => todo.id);
+      const updatedBatch = batch.map(todo => 
+        completedIds.includes(todo.id) ? { ...todo, operation_type: OperationType.Delete } : todo
+      );
+      const newCompletedTodos = completedTodos
+        .filter(todo => !updatedBatch.some(batchedTodo => batchedTodo.id === todo.id)) // filter out todos already batched
+        .map(todo => ({ ...todo, operation_type: OperationType.Delete }));
+      return updatedBatch.concat(newCompletedTodos);
+    });
     updateTodos(state => {
       return todos.filter(todo => {return !todo.completed});
     })
   }
 
-  let editItem = (e: React.ChangeEvent<HTMLInputElement>, id: number) => {
+  let editItemText = (e: React.ChangeEvent<HTMLInputElement>, id: number) => {
     e.persist();
-    updateTodos(state => {
-      for (let i=0; i < todos.length; i++) {
-        const todo = todos[i];
+    updateTodos(oldTodos => {
+      for (let i=0; i < oldTodos.length; i++) {
+        const todo = oldTodos[i];
         if (todo.id === id) {
-          let firstHalf = todos.slice(0,i);
-          let secondHalf = todos.slice(i+1,todos.length);
+          let firstHalf = oldTodos.slice(0,i);
+          let secondHalf = oldTodos.slice(i+1,oldTodos.length);
           const newItem = {
-            id: todo.id,
+            ...todo,
             text: e.target.value,
-            completed: todo.completed,
-            priority: todo.priority
           };
+          const batchTodo = batchedTodos.find(todo => todo.id === id);
+          if (batchTodo) {
+            batchTodo.text = newItem.text;
+          } else {
+            setBatchedTodos((batch) => {
+              return batch.concat({
+                ...newItem,
+                operation_type: OperationType.Update
+              });
+            });
+          }
           return firstHalf.concat([newItem]).concat(secondHalf);
         }
       }
-      return state;
+      return oldTodos;
+    });
+  }
+
+  let editItemDueDate = (date: dayjs.Dayjs | null, id: number) => {
+    updateTodos(oldTodos => {
+      for (let i=0; i < oldTodos.length; i++) {
+        const todo = oldTodos[i];
+        if (todo.id === id) {
+          let firstHalf = oldTodos.slice(0,i);
+          let secondHalf = oldTodos.slice(i+1,oldTodos.length);
+          const newItem = {
+            ...todo,
+            dueDate: date || undefined,
+          };
+          const batchTodo = batchedTodos.find(todo => todo.id === id);
+          if (batchTodo && date) {
+            batchTodo.dueDate = date;
+          } else if (batchTodo && !date) {
+            batchTodo.dueDate = undefined;
+          } else {
+            setBatchedTodos((batch) => {
+              return batch.concat({
+                ...newItem,
+                operation_type: OperationType.Update
+              });
+            });
+          }
+          return firstHalf.concat([newItem]).concat(secondHalf);
+        }
+      }
+      return oldTodos;
     });
   }
 
@@ -214,10 +220,22 @@ function TodoList(props: TodoListProps){
     updateTodos(oldTodos => {
       const newList = oldTodos.map((td, idx) => {
         if (td.id === id) {
-          return {
+          const newTd = {
             ...td,
             completed: !td.completed,
           }
+          const batchTodo = batchedTodos.find(todo => todo.id === id);
+          if (batchTodo) {
+            batchTodo.completed = newTd.completed;
+          } else {
+            setBatchedTodos((batch) => {
+              return batch.concat({
+                ...newTd,
+                operation_type: OperationType.Update
+              });
+            });
+          }
+          return newTd;
         }
         return td;
       });
@@ -230,8 +248,19 @@ function TodoList(props: TodoListProps){
     toggleCompleted(id);
   }
 
+  let getNewBlankItem = () => {
+    return {
+      id: getMaxId() + 1, // temporary id
+      text: '',
+      completed: false,
+      priority: null
+    };
+  }
+
   let todoTextKeyInput = (e: React.KeyboardEvent<HTMLInputElement>, id: number) => {
-    if (e.key === "Enter" && (e.target as HTMLInputElement).value !== '') {
+    // Add new item on Enter, toggle completed on Shift+Enter, view item details on Ctrl+Enter
+    // as long as the current todo text field is not empty (prevents adding empty todos)
+    if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim() !== '') {
       if (e.shiftKey) {
         e.preventDefault();
         toggleCompleted(id);
@@ -240,12 +269,7 @@ function TodoList(props: TodoListProps){
         updateToItemDetail(id);
       } else {
         e.preventDefault();
-        addItem({
-          id: getMaxId() + 1,
-          text: '',
-          completed: false,
-          priority: null
-        });
+        addItem(getNewBlankItem());
       }
     }
   };
@@ -259,6 +283,98 @@ function TodoList(props: TodoListProps){
     }
   }, [location]);
 
+  enum OperationType {
+    Add = 'POST',
+    Delete = 'DELETE',
+    Update = 'PUT'
+  }
+
+  interface BatchedTodo extends Item {
+    operation_type?: OperationType;
+  }
+
+  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
+  const [batchedTodos, setBatchedTodos] = useState<BatchedTodo[]>([]);
+
+  const httpHeaders = {
+    'Content-Type': 'application/json',
+  };
+
+  const updateServer = async (batch: BatchedTodo[]) => {
+    const sendBatch = async (todosToUpdate: Item[], method: OperationType) => {
+      if (todosToUpdate.length > 0) {
+        try {
+          return fetch(`${baseURL}/todos/batch`, {
+            method,
+            headers: httpHeaders,
+            body: JSON.stringify(todosToUpdate),
+          });
+        } catch (error) {
+          console.error(`Error ${method === OperationType.Add ? 'sending new' :
+            method === OperationType.Delete ? 'deleting' : 
+            'updating'} todos to the server:`, error);
+        }
+      }
+      return Promise.reject('No pending todo changes to send');
+    };
+
+    // separate by operation type then strip the unnecessary field before sending
+    const operations = [OperationType.Add, OperationType.Delete, OperationType.Update];
+    let promises = [];
+    for (const operation of operations) {
+      const todos = batch
+        .filter(todo => todo.operation_type === operation)
+        .map(todo => { delete todo.operation_type; return todo; });
+      if (todos.length === 0) continue;
+      promises.push(sendBatch(todos, operation));
+    }
+    return Promise.all(promises);
+  }
+
+  useEffect(() => {
+    // if batch size is reached, update the server immediately, reset the batch & clear timer
+    if (batchedTodos.length >= BATCH_SIZE) {
+      console.log('Batch size reached, updating server immediately');
+      console.log('Batched todos:', batchedTodos);
+      updateServer(batchedTodos).then((resp: Response[]) => {
+        setBatchedTodos([]);
+        console.log('Reset batched todos');
+        resp.forEach((r) => console.log('Server response: ', r));
+      }).catch((error) => {
+        console.error('Error updating server:', error);
+      });
+      if (timer) {
+        clearTimeout(timer); // cancel the pending HTTP calls
+        setTimer(null); // reset the timer
+        console.log('Timer cleared');
+      }
+    } else if (batchedTodos.length > 0 && !timer) {
+      console.log('Setting timer to update server');
+      if (timer) {
+        clearTimeout(timer);
+        console.log('Timer cleared');
+      }
+      // if there are pending changes, set a timer to update the server
+      const newTimer = setTimeout(() => {
+        console.log('timeout function running');
+        console.log('Batched todos:', batchedTodos);
+        console.log('Batched todos op types:');
+        batchedTodos.forEach(todo => console.log(todo.operation_type));
+        if (batchedTodos.length === 0) return;
+        updateServer(batchedTodos).then((resp: Response[]) => {
+          setBatchedTodos([]);
+          console.log('Reset batched todos');
+          resp.forEach((r) => console.log('Server response: ', r));
+        }).catch((error) => {
+          console.error('Error updating server:', error);
+        });
+        setTimer(null);
+        console.log('TIMER COMPLETED');
+      }, TIMEOUT * 1000);
+      setTimer(newTimer);
+    }
+  }, [batchedTodos]);
+
   const items = todos.map((entry, idx) => {
     if (hideCompleted && entry.completed) {
       return null;
@@ -268,10 +384,11 @@ function TodoList(props: TodoListProps){
         item={entry}
         key={entry.id}
         ref={idx === todos.length - 1 ? lastElementRef : null}
-        onChange={editItem}
-        onToggle={toggleCompletedEvent}
+        onItemTextChange={editItemText}
+        onCompletionToggle={toggleCompletedEvent}
         onKeyDown={todoTextKeyInput}
-        onPriorityChange={priorityChange}
+        onItemPriorityChange={priorityChange}
+        onItemDueDateChange={editItemDueDate}
         />
     )
   });

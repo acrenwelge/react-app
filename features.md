@@ -16,6 +16,8 @@
 - ✅ CTRL + ENTER brings up todo details
 - ✅ login page with dummy credentials
 - ✅ due dates
+- sorting by due date
+- format for overdue todos
 - editable todo details page
 - tags for todos
 - search for todos
@@ -24,8 +26,6 @@
 - filter by tags
 - recurring todos
 - select app theme
-- backend: REST API
-- backend: SQL database
 
 ## Tic Tac Toe Game
 
@@ -37,15 +37,16 @@
 - allow players to select their board size
 - allow players to select their win condition
 - allow players to select their game mode (classic, 3D, etc.)
-- backend: REST API
-- backend: SQL database
 
 ## Project Todos
 
 - ✅ add a CI pipeline
 - ✅ add TypeScript
-- ✅ json-server for testing
+- ✅ json-server for mocking / testing
+- backend: REST API
+- backend: MongoDB database
 
 ## Bugs Fixed
 
 - ✅ bug: text is copied to new todo
+- ✅ bug: batch update attempted even when no todos are updated

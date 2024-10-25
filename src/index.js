@@ -22,6 +22,8 @@ import { Game } from './tictactoe/game';
 import TodoItemDetail from './todo_list/todo_item_detail';
 import TodoList from './todo_list/todo_list';
 
+export const baseURL = 'http://localhost:3002';
+
 const theme = createTheme({
   palette: {
     primary: {
