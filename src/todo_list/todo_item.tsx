@@ -35,6 +35,7 @@ const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
           multiline
           tabIndex={item.id * 3 + 1}
           value={item.text}
+          placeholder="Enter task here"
           readOnly={item.completed}
           className={`${item.completed ? 'item-done' :''} priority-${item.priority}`}
           inputProps={{ className: `${item.completed ? 'item-done' :''}`}}

@@ -1,3 +1,5 @@
+import CheckIcon from '@mui/icons-material/Check';
+import { Alert, Checkbox, FormControlLabel, FormGroup, TextField } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import List from '@mui/material/List';
@@ -19,6 +21,7 @@ import './todo_list.css';
 // OR when the number of batched 'todos' updated equals BATCH_SIZE
 const BATCH_SIZE = 5;
 const TIMEOUT = 5;
+const ALERT_TIMEOUT = 3;
 
 export interface ItemAPI extends Omit<Item, 'id' | 'dueDate'> {
   id?: string;
@@ -295,6 +298,15 @@ function TodoList(props: TodoListProps){
 
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   const [batchedTodos, setBatchedTodos] = useState<BatchedTodo[]>([]);
+  enum AlertSeverity {
+    Success = 'success',
+    Error = 'error'
+  }
+  const [alert, setAlert] = useState({
+    show: false,
+    severity: AlertSeverity.Success,
+    message: ''
+  });
 
   const httpHeaders = {
     'Content-Type': 'application/json',
@@ -331,15 +343,24 @@ function TodoList(props: TodoListProps){
     return Promise.all(promises);
   }
 
+  const handleHttpResponses = (responses: Response[]) => {
+    setBatchedTodos([]);
+    console.log('Reset batched todos');
+    if (responses.every((r) => r.ok)) {
+      setAlert({ show: true, severity: AlertSeverity.Success, message: 'Changes saved' });
+      setTimeout(() => setAlert({...alert, show: false}), ALERT_TIMEOUT * 1000);
+    } else {
+      setAlert({ show: true, severity: AlertSeverity.Error, message: 'Error updating server' });
+    }
+  }
+
   useEffect(() => {
     // if batch size is reached, update the server immediately, reset the batch & clear timer
     if (batchedTodos.length >= BATCH_SIZE) {
       console.log('Batch size reached, updating server immediately');
       console.log('Batched todos:', batchedTodos);
-      updateServer(batchedTodos).then((resp: Response[]) => {
-        setBatchedTodos([]);
-        console.log('Reset batched todos');
-        resp.forEach((r) => console.log('Server response: ', r));
+      updateServer(batchedTodos).then((responses: Response[]) => {
+        handleHttpResponses(responses);
       }).catch((error) => {
         console.error('Error updating server:', error);
       });
@@ -361,10 +382,8 @@ function TodoList(props: TodoListProps){
         console.log('Batched todos op types:');
         batchedTodos.forEach(todo => console.log(todo.operation_type));
         if (batchedTodos.length === 0) return;
-        updateServer(batchedTodos).then((resp: Response[]) => {
-          setBatchedTodos([]);
-          console.log('Reset batched todos');
-          resp.forEach((r) => console.log('Server response: ', r));
+        updateServer(batchedTodos).then((responses: Response[]) => {
+          handleHttpResponses(responses);
         }).catch((error) => {
           console.error('Error updating server:', error);
         });
@@ -375,22 +394,37 @@ function TodoList(props: TodoListProps){
     }
   }, [batchedTodos]);
 
+  const [searchField, setSearchField] = useState<string | null>(null);
+  const [searchCaseSensitive, setSearchCaseSensitive] = useState<boolean>(false);
+
+  let searchFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = e.target.value;
+    setSearchField(searchValue);
+  }
+
   const items = todos.map((entry, idx) => {
     if (hideCompleted && entry.completed) {
       return null;
     }
-    return (
-      <TodoItem
-        item={entry}
-        key={entry.id}
-        ref={idx === todos.length - 1 ? lastElementRef : null}
-        onItemTextChange={editItemText}
-        onCompletionToggle={toggleCompletedEvent}
-        onKeyDown={todoTextKeyInput}
-        onItemPriorityChange={priorityChange}
-        onItemDueDateChange={editItemDueDate}
-        />
-    )
+    const searchText = searchCaseSensitive ? searchField : searchField?.toLowerCase();
+    const entryText = searchCaseSensitive ? entry.text : entry.text.toLowerCase();
+    console.log('searchText:', searchText);
+    console.log('entryText:', entryText);
+    console.log('match:', entryText.includes(searchText || ''));
+    if (!searchField || entryText.includes(searchText || '')) {
+      return (
+        <TodoItem
+          item={entry}
+          key={entry.id}
+          ref={idx === todos.length - 1 ? lastElementRef : null}
+          onItemTextChange={editItemText}
+          onCompletionToggle={toggleCompletedEvent}
+          onKeyDown={todoTextKeyInput}
+          onItemPriorityChange={priorityChange}
+          onItemDueDateChange={editItemDueDate}
+          />
+      )
+    }
   });
 
   const PaperDiv = styled('div')(({theme}) => ({
@@ -426,11 +460,6 @@ function TodoList(props: TodoListProps){
         </Modal>
       </Box>
       <Box>
-        <List className='todo-list'>
-          {items}
-        </List>
-      </Box>
-      <Box>
         <Button
           data-testid="add-item"
           color="primary"
@@ -457,6 +486,27 @@ function TodoList(props: TodoListProps){
           Sort
         </Button>
       </Box>
+      <Box>
+        <FormGroup>
+          <TextField label="Search" onChange={searchFieldChange} />
+          <FormControlLabel control={
+            <Checkbox checked={searchCaseSensitive}
+            onChange={() => setSearchCaseSensitive(!searchCaseSensitive)}
+          />} label="Case Sensitive" />
+        </FormGroup>
+      </Box>
+      <Box>
+        <FormGroup>
+          <List className='todo-list'>
+            {items}
+          </List>
+        </FormGroup>
+      </Box>
+      { alert.show &&
+        <Alert icon={<CheckIcon fontSize="inherit" />} severity={alert.severity}>
+          {alert.message}
+        </Alert>
+      }
     </>
   )
 

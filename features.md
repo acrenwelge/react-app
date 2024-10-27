@@ -16,14 +16,17 @@
 - ✅ CTRL + ENTER brings up todo details
 - ✅ login page with dummy credentials
 - ✅ due dates
+- ✅ search for todos by text
+- ✅ UI confirmation of batch updates
 - sorting by due date
 - format for overdue todos
 - editable todo details page
 - tags for todos
-- search for todos
 - filter by priority
 - filter by due date
 - filter by tags
+- pagination
+- user can set items per page
 - recurring todos
 - select app theme
 
