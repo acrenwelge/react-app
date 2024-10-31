@@ -12,23 +12,31 @@
 - ✅ create new todo with enter key or new button
 - ✅ SHIFT + ENTER completes a todo
 - ✅ each todo has a priority (NONE, LOW, MED, HIGH)
-- ✅ sorting by priority
 - ✅ CTRL + ENTER brings up todo details
 - ✅ login page with dummy credentials
 - ✅ due dates
 - ✅ search for todos by text
 - ✅ UI confirmation of batch updates
-- sorting by due date
-- format for overdue todos
+- ✅ sorting by due date and priority
+- ✅ filter by priority, due date, completion status
+- ✅ tags for todos
+- ✅ filter by tags
+- ✅ sort by tags
 - editable todo details page
-- tags for todos
-- filter by priority
-- filter by due date
-- filter by tags
-- pagination
-- user can set items per page
 - recurring todos
+- subtasks
+- offline mode
+
+### UI Improvement Ideas
+
 - select app theme
+- green text for completed todos; red for overdue
+- lighten the background when color coding by priority
+- pagination (user can set items per page)
+- skeleton loading
+- drag and drop todos
+- inline editing
+- card view / list view toggle
 
 ## Tic Tac Toe Game
 
@@ -46,10 +54,14 @@
 - ✅ add a CI pipeline
 - ✅ add TypeScript
 - ✅ json-server for mocking / testing
-- backend: REST API
+- ✅ backend: REST API
 - backend: MongoDB database
 
 ## Bugs Fixed
 
 - ✅ bug: text is copied to new todo
 - ✅ bug: batch update attempted even when no todos are updated
+
+## Bugs Pending
+
+- bug: only first update is saved

@@ -7,12 +7,14 @@
   "scripts": {
     "test": "jest",
     "start": "node server.js",
-    "start:watch": "node --watch server.js"
+    "start:watch": "node --watch server.js",
+    "start:persist": "node --watch server.js --persist"
   },
   "author": "Andrew Crenwelge",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "nedb": "^1.8.0"
   }
 }

@@ -1,21 +1,29 @@
+import AddIcon from '@mui/icons-material/Add';
 import CheckIcon from '@mui/icons-material/Check';
-import { Alert, Checkbox, FormControlLabel, FormGroup, TextField } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Alert, Checkbox, Divider, FormControl, FormControlLabel, FormGroup, Grid2, InputLabel, MenuItem, Select, Snackbar, SnackbarCloseReason, Switch, TextField } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Fab from '@mui/material/Fab';
 import List from '@mui/material/List';
 import Modal from '@mui/material/Modal';
 import { styled } from '@mui/material/styles';
 import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Redirect,
   Route,
-  Switch, useLocation, useRouteMatch
+  Switch as RouterSwitch, useLocation, useRouteMatch
 } from 'react-router-dom';
 import { baseURL } from '..';
-import TodoItem, { Item } from './todo_item';
+import updateServer from './todo_api';
+import TodoItem from './todo_item';
 import TodoItemDetail from './todo_item_detail';
 import './todo_list.css';
+import { batchedTodo, Item, ItemAPI, OperationType } from './todo_types';
+
+dayjs.extend(isBetween);
 
 // Code will attempt to update server with changes every TIMEOUT seconds
 // OR when the number of batched 'todos' updated equals BATCH_SIZE
@@ -23,22 +31,16 @@ const BATCH_SIZE = 5;
 const TIMEOUT = 5;
 const ALERT_TIMEOUT = 3;
 
-export interface ItemAPI extends Omit<Item, 'id' | 'dueDate'> {
-  id?: string;
-  dueDate?: string;
-}
-
-interface TodoListProps {}
-
-function TodoList(props: TodoListProps){
+function TodoList(props: {}){
   const [todos, updateTodos] = useState<Item[]>([]);
-  const [toItemDetail, updateToItemDetail] = useState<number | null>(null);
+  const [toItemDetail, updateToItemDetail] = useState<string | null>(null);
   const [newItemAdded, setNewItemAdded] = useState(false); // Used to focus on the new item
-  const [hideCompleted, setHideCompleted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [tags, setTags] = useState<Set<string>>(new Set());
   const lastElementRef: React.MutableRefObject<HTMLInputElement | null> = useRef(null);
   let match = useRouteMatch();
 
+  /** Focuses on new todo when added so it can be edited */
   useEffect(() => {
     if (newItemAdded && lastElementRef.current) {
       lastElementRef.current.click();
@@ -50,27 +52,27 @@ function TodoList(props: TodoListProps){
     const fetchTodos = async () => {
       try {
         const response = await fetch(`${baseURL}/todos`);
-        const rawTodos = await response.json();
-        const parsedTodos: Item[] = rawTodos.map((todo: ItemAPI) => ({
-          ...todo,
-          id: Number(todo.id),
-          dueDate: todo.dueDate ? dayjs(todo.dueDate) : undefined,
-        }));
+        const rawTodos: ItemAPI[] = await response.json();
+        let foundTags = new Set<string>();
+        let parsedTodos: Item[] = [];
+        for (const todo of rawTodos) {
+          if (todo.tags) {
+            for (const tag of todo.tags) {
+              foundTags.add(tag);
+            }
+          }
+          const parsedTodo = {...todo, dueDate: todo.dueDate ? dayjs(todo.dueDate) : undefined};
+          parsedTodos.push(parsedTodo);
+        }
+        console.log('Fetched todos:', parsedTodos);
         updateTodos(parsedTodos);
+        setTags(foundTags);
       } catch (error) {
         console.error('Error fetching todos:', error);
       }
     };
     fetchTodos();
   }, []); // Empty dependency array, runs once on mount
-
-  let getMaxId = () => {
-    let maxId = 0;
-    for (let todo of todos) {
-      if (todo.id > maxId) maxId = todo.id;
-    }
-    return maxId;
-  }
 
   let addItemBtnClick = (e: React.MouseEvent) => {
       e.persist();
@@ -80,12 +82,12 @@ function TodoList(props: TodoListProps){
   let addItem = (item: Item) => {
       updateTodos((oldTodoList) => {
         let newTodoList: Item[] = oldTodoList.slice();
-        const newBatchedTodoItem: BatchedTodo = {
+        const newbatchedTodoItem: batchedTodo = {
           ...item,
           operation_type: OperationType.Add
         };
         setBatchedTodos((batch) => {
-          return batch.concat(newBatchedTodoItem);
+          return batch.concat(newbatchedTodoItem);
         });
         newTodoList.push(item);
         setNewItemAdded(true);
@@ -93,28 +95,13 @@ function TodoList(props: TodoListProps){
       });
     }
 
-  let sortByPriority = (e: React.MouseEvent) => {
-    updateTodos(state => {
-      let newOrder = state.slice(0,state.length);
-      newOrder.sort((one, two) => {
-        const a = Number(one.priority);
-        const b = Number(two.priority);
-        if (a === 0 && b === 0) return 0;
-        else if (a === 0) return 1;
-        else if (b === 0) return -1;
-        return a - b;
-      });
-      return newOrder;
-    })
-  }
-
-  let priorityChange = (e: React.ChangeEvent<HTMLInputElement>, id: number) => {
+  let priorityChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
     e.persist();
     const newPriority = Number(e.target.value);
     if (newPriority < 0 || newPriority > 3) return;
-    const todoItem = todos.find(todo => todo.id === id);
+    const todoItem = todos.find(todo => todo._id === id);
     setBatchedTodos((batch) => {
-      const batchTodo = batch.find(todo => todo.id === id);
+      const batchTodo = batch.find(todo => todo._id === id);
       if (batchTodo) {
         batchTodo.priority = newPriority;
       } else if (todoItem) {
@@ -127,7 +114,7 @@ function TodoList(props: TodoListProps){
     });
     updateTodos(todos => {
       const newTodos = todos.map((todo) => {
-        if (todo.id === id) {
+        if (todo._id === id) {
           return {
             ...todo,
             priority: newPriority
@@ -144,12 +131,12 @@ function TodoList(props: TodoListProps){
     e.persist();
     setBatchedTodos((batch) => {
       const completedTodos = todos.filter(todo => todo.completed);
-      const completedIds = completedTodos.map(todo => todo.id);
+      const completedIds = completedTodos.map(todo => todo._id);
       const updatedBatch = batch.map(todo => 
-        completedIds.includes(todo.id) ? { ...todo, operation_type: OperationType.Delete } : todo
+        completedIds.includes(todo._id) ? { ...todo, operation_type: OperationType.Delete } : todo
       );
       const newCompletedTodos = completedTodos
-        .filter(todo => !updatedBatch.some(batchedTodo => batchedTodo.id === todo.id)) // filter out todos already batched
+        .filter(todo => !updatedBatch.some(batchedTodo => batchedTodo._id === todo._id)) // filter out todos already batched
         .map(todo => ({ ...todo, operation_type: OperationType.Delete }));
       return updatedBatch.concat(newCompletedTodos);
     });
@@ -158,109 +145,73 @@ function TodoList(props: TodoListProps){
     })
   }
 
-  let editItemText = (e: React.ChangeEvent<HTMLInputElement>, id: number) => {
-    e.persist();
+  const updateTodoItem = (id: string, updatedFields: Partial<Item>) => {
     updateTodos(oldTodos => {
-      for (let i=0; i < oldTodos.length; i++) {
-        const todo = oldTodos[i];
-        if (todo.id === id) {
-          let firstHalf = oldTodos.slice(0,i);
-          let secondHalf = oldTodos.slice(i+1,oldTodos.length);
-          const newItem = {
-            ...todo,
-            text: e.target.value,
-          };
-          const batchTodo = batchedTodos.find(todo => todo.id === id);
+      return oldTodos.map(todo => {
+        if (todo._id === id) {
+          const updatedTodo = { ...todo, ...updatedFields };
+          const batchTodo = batchedTodos.find(todo => todo._id === id);
           if (batchTodo) {
-            batchTodo.text = newItem.text;
+            Object.assign(batchTodo, updatedFields);
           } else {
-            setBatchedTodos((batch) => {
-              return batch.concat({
-                ...newItem,
-                operation_type: OperationType.Update
-              });
-            });
+            // BUG: only first todo update is batched, subsequent updates are not batched
+            setBatchedTodos(batch => batch.concat({
+              ...updatedTodo,
+              operation_type: OperationType.Update
+            }));
           }
-          return firstHalf.concat([newItem]).concat(secondHalf);
+          return updatedTodo;
         }
-      }
-      return oldTodos;
-    });
-  }
-
-  let editItemDueDate = (date: dayjs.Dayjs | null, id: number) => {
-    updateTodos(oldTodos => {
-      for (let i=0; i < oldTodos.length; i++) {
-        const todo = oldTodos[i];
-        if (todo.id === id) {
-          let firstHalf = oldTodos.slice(0,i);
-          let secondHalf = oldTodos.slice(i+1,oldTodos.length);
-          const newItem = {
-            ...todo,
-            dueDate: date || undefined,
-          };
-          const batchTodo = batchedTodos.find(todo => todo.id === id);
-          if (batchTodo && date) {
-            batchTodo.dueDate = date;
-          } else if (batchTodo && !date) {
-            batchTodo.dueDate = undefined;
-          } else {
-            setBatchedTodos((batch) => {
-              return batch.concat({
-                ...newItem,
-                operation_type: OperationType.Update
-              });
-            });
-          }
-          return firstHalf.concat([newItem]).concat(secondHalf);
-        }
-      }
-      return oldTodos;
-    });
-  }
-
-  let toggleCompleted = (id: number) => {
-    updateTodos(oldTodos => {
-      const newList = oldTodos.map((td, idx) => {
-        if (td.id === id) {
-          const newTd = {
-            ...td,
-            completed: !td.completed,
-          }
-          const batchTodo = batchedTodos.find(todo => todo.id === id);
-          if (batchTodo) {
-            batchTodo.completed = newTd.completed;
-          } else {
-            setBatchedTodos((batch) => {
-              return batch.concat({
-                ...newTd,
-                operation_type: OperationType.Update
-              });
-            });
-          }
-          return newTd;
-        }
-        return td;
+        return todo;
       });
-      return newList;
     });
+  };
+
+  const editItemText = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+    e.persist();
+    updateTodoItem(id, { text: e.target.value });
+  };
+
+  const editItemTags = (newTags: string[], id: string) => {
+    updateTodoItem(id, { tags: newTags });
   }
 
-  let toggleCompletedEvent = (e: React.ChangeEvent) => {
-    const id = Number((e.target as HTMLInputElement).value);
+  const editItemDueDate = (date: dayjs.Dayjs | null, id: string) => {
+    updateTodoItem(id, { dueDate: date || undefined });
+  };
+
+  const toggleCompleted = (id: string) => {
+    updateTodoItem(id, { completed: !todos.find(todo => todo._id === id)?.completed });
+  }
+
+  const toggleCompletedEvent = (e: React.ChangeEvent) => {
+    const id = (e.target as HTMLInputElement).value;
     toggleCompleted(id);
+  }
+
+  function makeId(length: number) {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      counter += 1;
+    }
+    return result;
   }
 
   let getNewBlankItem = () => {
     return {
-      id: getMaxId() + 1, // temporary id
+      _id: makeId(16), // temporary id
       text: '',
       completed: false,
-      priority: null
+      priority: null,
+      dueDate: undefined
     };
   }
 
-  let todoTextKeyInput = (e: React.KeyboardEvent<HTMLInputElement>, id: number) => {
+  let todoTextKeyInput = (e: React.KeyboardEvent<HTMLInputElement>, id: string) => {
     // Add new item on Enter, toggle completed on Shift+Enter, view item details on Ctrl+Enter
     // as long as the current todo text field is not empty (prevents adding empty todos)
     if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim() !== '') {
@@ -286,18 +237,8 @@ function TodoList(props: TodoListProps){
     }
   }, [location]);
 
-  enum OperationType {
-    Add = 'POST',
-    Delete = 'DELETE',
-    Update = 'PUT'
-  }
-
-  interface BatchedTodo extends Item {
-    operation_type?: OperationType;
-  }
-
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
-  const [batchedTodos, setBatchedTodos] = useState<BatchedTodo[]>([]);
+  const [batchedTodos, setBatchedTodos] = useState<batchedTodo[]>([]);
   enum AlertSeverity {
     Success = 'success',
     Error = 'error'
@@ -308,44 +249,8 @@ function TodoList(props: TodoListProps){
     message: ''
   });
 
-  const httpHeaders = {
-    'Content-Type': 'application/json',
-  };
-
-  const updateServer = async (batch: BatchedTodo[]) => {
-    const sendBatch = async (todosToUpdate: Item[], method: OperationType) => {
-      if (todosToUpdate.length > 0) {
-        try {
-          return fetch(`${baseURL}/todos/batch`, {
-            method,
-            headers: httpHeaders,
-            body: JSON.stringify(todosToUpdate),
-          });
-        } catch (error) {
-          console.error(`Error ${method === OperationType.Add ? 'sending new' :
-            method === OperationType.Delete ? 'deleting' : 
-            'updating'} todos to the server:`, error);
-        }
-      }
-      return Promise.reject('No pending todo changes to send');
-    };
-
-    // separate by operation type then strip the unnecessary field before sending
-    const operations = [OperationType.Add, OperationType.Delete, OperationType.Update];
-    let promises = [];
-    for (const operation of operations) {
-      const todos = batch
-        .filter(todo => todo.operation_type === operation)
-        .map(todo => { delete todo.operation_type; return todo; });
-      if (todos.length === 0) continue;
-      promises.push(sendBatch(todos, operation));
-    }
-    return Promise.all(promises);
-  }
-
   const handleHttpResponses = (responses: Response[]) => {
     setBatchedTodos([]);
-    console.log('Reset batched todos');
     if (responses.every((r) => r.ok)) {
       setAlert({ show: true, severity: AlertSeverity.Success, message: 'Changes saved' });
       setTimeout(() => setAlert({...alert, show: false}), ALERT_TIMEOUT * 1000);
@@ -357,8 +262,6 @@ function TodoList(props: TodoListProps){
   useEffect(() => {
     // if batch size is reached, update the server immediately, reset the batch & clear timer
     if (batchedTodos.length >= BATCH_SIZE) {
-      console.log('Batch size reached, updating server immediately');
-      console.log('Batched todos:', batchedTodos);
       updateServer(batchedTodos).then((responses: Response[]) => {
         handleHttpResponses(responses);
       }).catch((error) => {
@@ -367,20 +270,13 @@ function TodoList(props: TodoListProps){
       if (timer) {
         clearTimeout(timer); // cancel the pending HTTP calls
         setTimer(null); // reset the timer
-        console.log('Timer cleared');
       }
     } else if (batchedTodos.length > 0 && !timer) {
-      console.log('Setting timer to update server');
       if (timer) {
         clearTimeout(timer);
-        console.log('Timer cleared');
       }
       // if there are pending changes, set a timer to update the server
       const newTimer = setTimeout(() => {
-        console.log('timeout function running');
-        console.log('Batched todos:', batchedTodos);
-        console.log('Batched todos op types:');
-        batchedTodos.forEach(todo => console.log(todo.operation_type));
         if (batchedTodos.length === 0) return;
         updateServer(batchedTodos).then((responses: Response[]) => {
           handleHttpResponses(responses);
@@ -388,44 +284,111 @@ function TodoList(props: TodoListProps){
           console.error('Error updating server:', error);
         });
         setTimer(null);
-        console.log('TIMER COMPLETED');
       }, TIMEOUT * 1000);
       setTimer(newTimer);
     }
   }, [batchedTodos]);
 
+  enum SortAndFilterLabels {
+    None = 'None',
+    Priority = 'Priority',
+    DueDate = 'Due Date',
+    Tags = 'Tags'
+  }
+
   const [searchField, setSearchField] = useState<string | null>(null);
   const [searchCaseSensitive, setSearchCaseSensitive] = useState<boolean>(false);
+  const [sortBy, setSortBy] = useState<SortAndFilterLabels>(SortAndFilterLabels.None);
+  const [sortOrder, setSortOrder] = useState<string>("asc");
+  const [filterBy, setFilterBy] = useState<SortAndFilterLabels | number | string>("None");
 
   let searchFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = e.target.value;
     setSearchField(searchValue);
   }
 
-  const items = todos.map((entry, idx) => {
-    if (hideCompleted && entry.completed) {
-      return null;
-    }
+  const onDelete = (id: string) => {
+    setBatchedTodos((batch) => {
+      const batchTodo = batch.find(todo => todo._id === id);
+      if (batchTodo) {
+        batchTodo.operation_type = OperationType.Delete;
+      } else {
+        const todoItem = todos.find(todo => todo._id === id);
+        if (todoItem) {
+          return batch.concat({
+            ...todoItem,
+            operation_type: OperationType.Delete
+          });
+        }
+      }
+      return batch;
+    });
+    updateTodos(todos => {
+      return todos.filter(todo => todo._id !== id);
+    });
+  }
+
+  const filteredTodos = todos.map((entry, idx) => {
     const searchText = searchCaseSensitive ? searchField : searchField?.toLowerCase();
     const entryText = searchCaseSensitive ? entry.text : entry.text.toLowerCase();
-    console.log('searchText:', searchText);
-    console.log('entryText:', entryText);
-    console.log('match:', entryText.includes(searchText || ''));
-    if (!searchField || entryText.includes(searchText || '')) {
+    // apply filter if search field is not empty and entry text contains search text
+    if (!searchField || entryText.includes(searchText || '') || entry.tags?.some(tag => tag.includes(searchText || ''))) {
+      if (filterBy === "overdue") {
+        if (!entry.dueDate || entry.dueDate.isAfter(dayjs(), 'day')) { return null;}
+      } else if (filterBy === "incomplete") {
+        if (entry.completed) { return null; }
+      } else if (filterBy === "complete") {
+        if (!entry.completed) { return null; }
+      } else if (filterBy === "today") {
+        if (!entry.dueDate || !entry.dueDate.isSame(dayjs(), 'day')) { return null; }
+      } else if (filterBy === "week") {
+        if (!entry.dueDate || !entry.dueDate.isBetween(dayjs(), dayjs().add(1, 'week'), 'day', '[]')) { return null; }
+      } else if (filterBy === "month") {
+        if (!entry.dueDate || !entry.dueDate.isBetween(dayjs(), dayjs().add(1, 'month'), 'day', '[]')) { return null; }
+      } else if (typeof filterBy === 'number') {
+        if (entry.priority !== filterBy) { return null; }
+      }
       return (
         <TodoItem
           item={entry}
-          key={entry.id}
+          key={entry._id}
           ref={idx === todos.length - 1 ? lastElementRef : null}
+          tagOptions={Array.from(tags)}
+          onTagUpdate={editItemTags}
           onItemTextChange={editItemText}
           onCompletionToggle={toggleCompletedEvent}
           onKeyDown={todoTextKeyInput}
           onItemPriorityChange={priorityChange}
           onItemDueDateChange={editItemDueDate}
+          onDelete={onDelete}
           />
       )
     }
+  }).sort((a, b) => {
+    let res = 0;
+    if (sortBy === SortAndFilterLabels.Priority) {
+      res = a?.props.item.priority - b?.props.item.priority;
+    } else if (sortBy === SortAndFilterLabels.DueDate) {
+      res = b?.props.item.dueDate?.diff(a?.props.item.dueDate);
+    } else if (sortBy === SortAndFilterLabels.Tags) {
+      res = a?.props.item.tags?.length - b?.props.item.tags?.length;
+    }
+    return sortOrder === 'asc' ? res : -res;
   });
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (batchedTodos.length > 0) {
+        event.preventDefault();
+        event.returnValue = ''; // Required for Chrome to show the confirmation dialog
+        updateServer(batchedTodos);
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [batchedTodos]);
 
   const PaperDiv = styled('div')(({theme}) => ({
     position: 'absolute',
@@ -435,8 +398,8 @@ function TodoList(props: TodoListProps){
     boxShadow: theme.shadows[5],
     padding: theme.spacing(2, 4, 3),
   }));
-
   const listView = (
+
     <>
       <Box>
         <h1>My Todos</h1>
@@ -460,67 +423,120 @@ function TodoList(props: TodoListProps){
         </Modal>
       </Box>
       <Box>
-        <Button
-          data-testid="add-item"
-          color="primary"
-          variant='contained'
-          onClick={addItemBtnClick}>
-          Add
-        </Button>
-        <Button
-          data-testid="toggle-hide-completed"
-          color="info"
-          onClick={() => setHideCompleted(!hideCompleted)}
-          >
-          {hideCompleted ? 'Show' : 'Hide'} Completed
-        </Button>
-        <Button
-          data-testid="remove-completed"
-          color="secondary"
-          onClick={removeCompleted}>
-          Delete All Completed
-        </Button>
-        <Button
-          data-testid='sort-by-priority'
-          onClick={sortByPriority}>
-          Sort
-        </Button>
+        <FormControl>
+          <Fab
+            color="primary"
+            variant='extended'
+            data-testid="add-item"
+            aria-label="add"
+            onClick={addItemBtnClick}>
+            <AddIcon />
+            Add
+          </Fab>
+        </FormControl>
+        <FormControl>
+          <Button
+            data-testid="remove-completed"
+            color="secondary"
+            onClick={removeCompleted}>
+            <DeleteIcon />
+            Delete All Completed
+          </Button>
+        </FormControl>
       </Box>
-      <Box>
+      <Grid2 container spacing={1}>
         <FormGroup>
-          <TextField label="Search" onChange={searchFieldChange} />
-          <FormControlLabel control={
-            <Checkbox checked={searchCaseSensitive}
-            onChange={() => setSearchCaseSensitive(!searchCaseSensitive)}
-          />} label="Case Sensitive" />
+          {/* <FormControl variant="standard"> */}
+          <Grid2>
+            <TextField margin='dense' label="Search" onChange={searchFieldChange} />
+            <FormControlLabel control={
+                <Checkbox checked={searchCaseSensitive}
+                onChange={() => setSearchCaseSensitive(!searchCaseSensitive)}
+              />} label="Case Sensitive" />
+          </Grid2>
+          {/* </FormControl> */}
         </FormGroup>
-      </Box>
-      <Box>
+          <Grid2>
+            <InputLabel margin='dense' id="sort-label">Sort By</InputLabel>
+            <Select margin='dense'
+              labelId="sort-select-label"
+              id="sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortAndFilterLabels)}
+              label="Sort By"
+            >
+              <MenuItem value={SortAndFilterLabels.None}>None</MenuItem>
+              <MenuItem value={SortAndFilterLabels.Priority}>Priority</MenuItem>
+              <MenuItem value={SortAndFilterLabels.DueDate}>Due Date</MenuItem>
+              <MenuItem value={SortAndFilterLabels.Tags}>Tags</MenuItem>
+            </Select>
+          </Grid2>
+          <Grid2>
+            <FormControlLabel control={
+              <Switch checked={sortOrder === 'asc'} 
+                disabled={sortBy === SortAndFilterLabels.None}
+                onChange={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}/>}
+                label="Sort Ascending" />
+          </Grid2>
+          <Grid2>
+            <InputLabel id="filter-label">Filter</InputLabel>
+            <Select
+              labelId="filter-select-label"
+              id="filter-select"
+              value={filterBy}
+              onChange={(e) => setFilterBy(e.target.value as SortAndFilterLabels)}
+              label="Filter By"
+            >
+              <MenuItem value="None">None</MenuItem>
+              <Divider />
+              <MenuItem value="incomplete">Incomplete</MenuItem>
+              <MenuItem value="complete">Completed</MenuItem>
+              <Divider />
+              <MenuItem value={1}>Priority 1</MenuItem>
+              <MenuItem value={2}>Priority 2</MenuItem>
+              <MenuItem value={3}>Priority 3</MenuItem>
+              <Divider />
+              <MenuItem value={"overdue"}>Overdue</MenuItem>
+              <MenuItem value={"today"}>Due Today</MenuItem>
+              <MenuItem value={"week"}>Due This Week</MenuItem>
+              <MenuItem value={"month"}>Due This Month</MenuItem>
+            </Select>
+          </Grid2>
+      </Grid2>
+      <Grid2 container>
         <FormGroup>
-          <List className='todo-list'>
-            {items}
-          </List>
+          <Grid2>
+            <List className='todo-list'>
+              {filteredTodos}
+            </List>
+          </Grid2>
         </FormGroup>
-      </Box>
-      { alert.show &&
-        <Alert icon={<CheckIcon fontSize="inherit" />} severity={alert.severity}>
+      </Grid2>
+      <Snackbar open={alert.show} autoHideDuration={ALERT_TIMEOUT * 1000}
+        onClose={(event?: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
+          if (reason === 'clickaway') { return;}
+          setAlert({...alert, show: false});
+        }}>
+        <Alert
+          icon={<CheckIcon fontSize="inherit" />}
+          severity={alert.severity}>
           {alert.message}
         </Alert>
-      }
+      </Snackbar>
     </>
   )
 
   return (
     <React.Fragment>
         {toItemDetail ? <Redirect to={`${match.url}/${toItemDetail}`} /> : '' }
-        <Switch>
+        <RouterSwitch>
           <Route exact path={match.path}>
             {listView}
           </Route>
           <Route path={`${match.path}/:id`}>
-            <TodoItemDetail todos={todos}/>
+            <TodoItemDetail todos={todos} />
           </Route>
-        </Switch>
+        </RouterSwitch>
     </React.Fragment>
   )
 }
