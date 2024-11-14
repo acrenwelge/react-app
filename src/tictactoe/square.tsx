@@ -4,18 +4,18 @@ import './square.css';
 interface SquareProps {
   highlight: boolean;
   textHexColor: string;
-  value: string;
+  symbol: string;
   onClick: () => void;
 }
 
 export default function Square(props: SquareProps) {
-  let cn = "square";
+  let className = "square";
   if (props.highlight) {
-    cn="square hl";
+    className="square hl";
   }
   return (
-    <button className={cn} onClick={props.onClick} style={{color: props.textHexColor}}>
-      {props.value}
+    <button className={className} onClick={props.onClick} style={{color: props.textHexColor}}>
+      {props.symbol}
     </button>
   );
 }

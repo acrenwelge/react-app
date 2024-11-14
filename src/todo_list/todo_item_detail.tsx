@@ -47,25 +47,23 @@ function TodoItemDetail(props: TodoItemDetailProps) {
   }
 
   return (
-    <div data-testid='item-detail'>
-      <Grid2 container rowSpacing={3}>
-        <Grid2 size={4}>
-          {currentIndex > 0 && <Link to={`/todos/${props.todos[currentIndex-1]._id}`}>
-            <ArrowBackIcon fontSize='small'/>
-            Previous
-          </Link>}
-        </Grid2>
-        <Grid2 size={4}>
-          <Link to="/todos">
-            All Todo Items
-          </Link>
-        </Grid2>
-        <Grid2 size={4}>
-          {currentIndex+1 < props.todos.length && <Link to={`/todos/${props.todos[currentIndex+1]._id}`}>
-            <ArrowForwardIcon fontSize='small'/>
-            Next
-          </Link>}
-        </Grid2>
+    <Grid2 container rowSpacing={3} data-testid='item-detail' display='flex' alignItems='center' justifyContent='center'>
+      <Grid2 size={4} display='flex' alignItems='flex-start' justifyContent='flex-start'>
+        {currentIndex > 0 && <Link to={`/todos/${props.todos[currentIndex-1]._id}`}>
+          <ArrowBackIcon fontSize='small'/>
+          Previous
+        </Link>}
+      </Grid2>
+      <Grid2 size={4} display='flex' alignItems='center' justifyContent='center'>
+        <Link to="/todos">
+          All Todo Items
+        </Link>
+      </Grid2>
+      <Grid2 size={4} display='flex' alignItems='flex-end' justifyContent='flex-end'>
+        {currentIndex+1 < props.todos.length && <Link to={`/todos/${props.todos[currentIndex+1]._id}`}>
+          <ArrowForwardIcon fontSize='small'/>
+          Next
+        </Link>}
       </Grid2>
       <Paper elevation={3} sx={{padding: '10px', marginTop: '5px'}}>
         <h2>Task Details</h2>
@@ -116,7 +114,7 @@ function TodoItemDetail(props: TodoItemDetailProps) {
           </Grid2>
         </Grid2>
       </Paper>
-    </div>
+    </Grid2>
   );
 }
 

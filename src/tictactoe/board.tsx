@@ -1,29 +1,28 @@
+import { Grid2 } from '@mui/material';
 import React from 'react';
 import './board.css';
+import { Players, WinObj } from './game';
 import Square from './square';
 
 interface BoardProps {
   squares: string[];
   onClick: (i: number) => void;
-  winObj: any;
-  players: any;
-  p1IsX: boolean;
+  winObj?: WinObj;
+  players: Players;
 }
 
 export default class Board extends React.Component<BoardProps> {
 
   renderSquare(i: number, highlight: boolean) {
     console.log(this.props.players);
-    console.log(this.props.p1IsX);
     let textHexColor = this.props.players.p2.color;
-    if ((this.props.p1IsX && this.props.squares[i] === 'X')
-      || (!this.props.p1IsX && this.props.squares[i] === 'O')) {
+    if (this.props.squares[i] === this.props.players.p1.symbol) {
       textHexColor = this.props.players.p1.color;
     }
     return (
       <Square
       key={i}
-      value={this.props.squares[i]}
+      symbol={this.props.squares[i]}
       highlight={highlight}
       textHexColor={textHexColor}
       onClick={() => this.props.onClick(i)}/>
@@ -47,9 +46,11 @@ export default class Board extends React.Component<BoardProps> {
     }
 
     return (
-      <div>
-        {divs}
-      </div>
+      <Grid2 container>
+        <Grid2>
+          {divs}
+        </Grid2>
+      </Grid2>
     );
   }
 }

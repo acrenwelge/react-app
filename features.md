@@ -44,6 +44,8 @@
 - ✅ simple tic-tac-toe game
 - ✅ color coding by player
 - ✅ allow players to select their color
+- save game results
+- view previous game results
 - allow players to select their symbol
 - allow players to select their board size
 - allow players to select their win condition
@@ -55,7 +57,7 @@
 - ✅ add TypeScript
 - ✅ json-server for mocking / testing
 - ✅ backend: REST API
-- backend: MongoDB database
+- ✅ backend: nedb (MongoDB-like database)
 
 ## Bugs Fixed
 

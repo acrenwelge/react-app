@@ -2,7 +2,6 @@ import AddIcon from '@mui/icons-material/Add';
 import CheckIcon from '@mui/icons-material/Check';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Alert, Checkbox, Divider, FormControl, FormControlLabel, FormGroup, Grid2, InputLabel, MenuItem, Select, Snackbar, SnackbarCloseReason, Switch, TextField } from '@mui/material';
-import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Fab from '@mui/material/Fab';
 import List from '@mui/material/List';
@@ -28,7 +27,7 @@ dayjs.extend(isBetween);
 // Code will attempt to update server with changes every TIMEOUT seconds
 // OR when the number of batched 'todos' updated equals BATCH_SIZE
 const BATCH_SIZE = 5;
-const TIMEOUT = 5;
+const TIMEOUT = 1;
 const ALERT_TIMEOUT = 3;
 
 function TodoList(props: {}){
@@ -37,13 +36,13 @@ function TodoList(props: {}){
   const [newItemAdded, setNewItemAdded] = useState(false); // Used to focus on the new item
   const [modalOpen, setModalOpen] = useState(false);
   const [tags, setTags] = useState<Set<string>>(new Set());
-  const lastElementRef: React.MutableRefObject<HTMLInputElement | null> = useRef(null);
+  const lastTodoItemRef: React.MutableRefObject<HTMLInputElement | null> = useRef(null);
   let match = useRouteMatch();
 
   /** Focuses on new todo when added so it can be edited */
   useEffect(() => {
-    if (newItemAdded && lastElementRef.current) {
-      lastElementRef.current.click();
+    if (newItemAdded && lastTodoItemRef.current) {
+      lastTodoItemRef.current.click();
       setNewItemAdded(false);
     }
   }, [newItemAdded]);
@@ -352,7 +351,7 @@ function TodoList(props: {}){
         <TodoItem
           item={entry}
           key={entry._id}
-          ref={idx === todos.length - 1 ? lastElementRef : null}
+          ref={idx === todos.length - 1 ? lastTodoItemRef : null}
           tagOptions={Array.from(tags)}
           onTagUpdate={editItemTags}
           onItemTextChange={editItemText}
@@ -400,11 +399,11 @@ function TodoList(props: {}){
   }));
   const listView = (
 
-    <>
-      <Box>
+    <Grid2 container spacing={1} >
+      <Grid2 size={12} display='flex' alignItems='center' justifyContent='center'>
         <h1>My Todos</h1>
-      </Box>
-      <Box>
+      </Grid2>
+      <Grid2 size={12} display='flex' alignItems='center' justifyContent='center'>
         <Button onClick={() => setModalOpen(true)}>Keyboard Shortcuts</Button>
         <Modal
           sx={{
@@ -421,8 +420,74 @@ function TodoList(props: {}){
               <code>ENTER</code> - add new item<br/>
             </PaperDiv>
         </Modal>
-      </Box>
-      <Box>
+      </Grid2>
+      <Grid2 size={{xs: 12, sm: 6, lg: 4}}>
+        <FormGroup>
+          <TextField margin='dense' label="Search" onChange={searchFieldChange} />
+          <FormControlLabel control={
+              <Checkbox checked={searchCaseSensitive}
+              onChange={() => setSearchCaseSensitive(!searchCaseSensitive)}
+            />} label="Case Sensitive" />
+        </FormGroup>
+      </Grid2>
+      <Grid2 size={{xs: 12, sm: 6, lg: 4}}>
+        <FormGroup>
+          <InputLabel margin='dense' id="sort-label">Sort By</InputLabel>
+          <Select margin='dense'
+            labelId="sort-select-label"
+            id="sort-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortAndFilterLabels)}
+            label="Sort By"
+          >
+            <MenuItem value={SortAndFilterLabels.None}>None</MenuItem>
+            <MenuItem value={SortAndFilterLabels.Priority}>Priority</MenuItem>
+            <MenuItem value={SortAndFilterLabels.DueDate}>Due Date</MenuItem>
+            <MenuItem value={SortAndFilterLabels.Tags}>Tags</MenuItem>
+          </Select>
+          <FormControlLabel control={
+            <Switch checked={sortOrder === 'asc'} 
+              disabled={sortBy === SortAndFilterLabels.None}
+              onChange={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}/>}
+              label="Sort Ascending" />
+        </FormGroup>
+      </Grid2>
+      <Grid2 size={{xs: 12, sm: 6, lg: 4}}>
+        <FormGroup>
+          <InputLabel id="filter-label">Filter</InputLabel>
+          <Select
+            labelId="filter-select-label"
+            id="filter-select"
+            value={filterBy}
+            onChange={(e) => setFilterBy(e.target.value as SortAndFilterLabels)}
+            label="Filter By"
+          >
+            <MenuItem value="None">None</MenuItem>
+            <Divider />
+            <MenuItem value="incomplete">Incomplete</MenuItem>
+            <MenuItem value="complete">Completed</MenuItem>
+            <Divider />
+            <MenuItem value={1}>Priority 1</MenuItem>
+            <MenuItem value={2}>Priority 2</MenuItem>
+            <MenuItem value={3}>Priority 3</MenuItem>
+            <Divider />
+            <MenuItem value={"overdue"}>Overdue</MenuItem>
+            <MenuItem value={"today"}>Due Today</MenuItem>
+            <MenuItem value={"week"}>Due This Week</MenuItem>
+            <MenuItem value={"month"}>Due This Month</MenuItem>
+          </Select>
+        </FormGroup>
+      </Grid2>
+      <Grid2 size={12} display='flex' alignItems='center' justifyContent='center'>
+        <FormGroup>
+          <Grid2>
+            <List className='todo-list'>
+              {filteredTodos}
+            </List>
+          </Grid2>
+        </FormGroup>
+      </Grid2>
+      <Grid2 size={12} display='flex' alignItems='center' justifyContent='center'>
         <FormControl>
           <Fab
             color="primary"
@@ -431,7 +496,7 @@ function TodoList(props: {}){
             aria-label="add"
             onClick={addItemBtnClick}>
             <AddIcon />
-            Add
+            Add New
           </Fab>
         </FormControl>
         <FormControl>
@@ -443,74 +508,6 @@ function TodoList(props: {}){
             Delete All Completed
           </Button>
         </FormControl>
-      </Box>
-      <Grid2 container spacing={1}>
-        <FormGroup>
-          {/* <FormControl variant="standard"> */}
-          <Grid2>
-            <TextField margin='dense' label="Search" onChange={searchFieldChange} />
-            <FormControlLabel control={
-                <Checkbox checked={searchCaseSensitive}
-                onChange={() => setSearchCaseSensitive(!searchCaseSensitive)}
-              />} label="Case Sensitive" />
-          </Grid2>
-          {/* </FormControl> */}
-        </FormGroup>
-          <Grid2>
-            <InputLabel margin='dense' id="sort-label">Sort By</InputLabel>
-            <Select margin='dense'
-              labelId="sort-select-label"
-              id="sort-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortAndFilterLabels)}
-              label="Sort By"
-            >
-              <MenuItem value={SortAndFilterLabels.None}>None</MenuItem>
-              <MenuItem value={SortAndFilterLabels.Priority}>Priority</MenuItem>
-              <MenuItem value={SortAndFilterLabels.DueDate}>Due Date</MenuItem>
-              <MenuItem value={SortAndFilterLabels.Tags}>Tags</MenuItem>
-            </Select>
-          </Grid2>
-          <Grid2>
-            <FormControlLabel control={
-              <Switch checked={sortOrder === 'asc'} 
-                disabled={sortBy === SortAndFilterLabels.None}
-                onChange={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}/>}
-                label="Sort Ascending" />
-          </Grid2>
-          <Grid2>
-            <InputLabel id="filter-label">Filter</InputLabel>
-            <Select
-              labelId="filter-select-label"
-              id="filter-select"
-              value={filterBy}
-              onChange={(e) => setFilterBy(e.target.value as SortAndFilterLabels)}
-              label="Filter By"
-            >
-              <MenuItem value="None">None</MenuItem>
-              <Divider />
-              <MenuItem value="incomplete">Incomplete</MenuItem>
-              <MenuItem value="complete">Completed</MenuItem>
-              <Divider />
-              <MenuItem value={1}>Priority 1</MenuItem>
-              <MenuItem value={2}>Priority 2</MenuItem>
-              <MenuItem value={3}>Priority 3</MenuItem>
-              <Divider />
-              <MenuItem value={"overdue"}>Overdue</MenuItem>
-              <MenuItem value={"today"}>Due Today</MenuItem>
-              <MenuItem value={"week"}>Due This Week</MenuItem>
-              <MenuItem value={"month"}>Due This Month</MenuItem>
-            </Select>
-          </Grid2>
-      </Grid2>
-      <Grid2 container>
-        <FormGroup>
-          <Grid2>
-            <List className='todo-list'>
-              {filteredTodos}
-            </List>
-          </Grid2>
-        </FormGroup>
       </Grid2>
       <Snackbar open={alert.show} autoHideDuration={ALERT_TIMEOUT * 1000}
         onClose={(event?: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
@@ -523,7 +520,7 @@ function TodoList(props: {}){
           {alert.message}
         </Alert>
       </Snackbar>
-    </>
+    </Grid2>
   )
 
   return (

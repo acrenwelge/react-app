@@ -1,4 +1,5 @@
-import Grid from '@mui/material/Grid';
+import Container from '@mui/material/Container';
+import Grid2 from '@mui/material/Grid2';
 import React from 'react';
 import Navbar from './navbar.js';
 
@@ -13,13 +14,13 @@ export default function PageContent(props) {
   };
 
   return (
-    <Grid container direction="row" justify="center" alignContent="center" alignItems="center" spacing={3}>
-      <Grid item xs={12}>
+    <>
+    <Container maxWidth="xl">
+      <Grid2 size={12}>
         <Navbar />
-      </Grid>
-      <Grid style={centered} item xs={6}>
-        {props.children}
-      </Grid>
-    </Grid>
+      </Grid2>
+    </Container>
+    {props.children}
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import { Autocomplete, Checkbox, FormGroup, Input, ListItem, TextField } from "@mui/material";
+import { Autocomplete, Checkbox, FormGroup, ListItem, TextField } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import React, { forwardRef } from "react";
@@ -22,31 +22,28 @@ const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
     onItemPriorityChange, onItemDueDateChange } = props;
 
   return (
-    <ListItem>
+    <ListItem dense disableGutters>
       <FormGroup row>
         <Checkbox checked={item.completed}
           onChange={onCompletionToggle}
           value={item._id}
-          //tabIndex={item._id * 3}
           />
-        <Input type="text"
+        <TextField type="text"
+          variant="outlined"
           multiline
-          // tabIndex={item._id * 3 + 1}
           value={item.text}
           placeholder="Enter task here"
-          readOnly={item.completed}
           className={`${item.completed ? 'item-done' :''} priority-${item.priority}`}
-          inputProps={{ className: `${item.completed ? 'item-done' :''}`}}
+          slotProps={{htmlInput: { className: `${item.completed ? 'item-done' :''}`}}}
           ref={ref}
           onKeyDown={(e) => onKeyDown(e as React.KeyboardEvent<HTMLInputElement>, item._id)}
           onChange={(e) => onItemTextChange(e as React.ChangeEvent<HTMLInputElement>, item._id)}
           />
         <TextField type="number"
           label="priority"
-          // tabIndex={item._id * 3 + 2}
           value={item.priority ?? ''}
-          inputProps={
-            {min: 1, max: 3}
+          slotProps={
+            {htmlInput: {min: 1, max: 3}}
           }
           onChange={(e) => onItemPriorityChange(e as React.ChangeEvent<HTMLInputElement>,item._id)}
           />
@@ -67,23 +64,16 @@ const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
           id="tags-standard"
           options={tagOptions ?? []}
           value={item.tags || undefined}
-          sx={{width: '150px'}}
+          sx={{width: '250px'}}
           onChange={(e, tags) => onTagUpdate(tags, item._id)}
           renderInput={(params) => (
             <TextField
               {...params}
-              variant="standard"
+              variant="outlined"
               label="Tags"
             />
             )}
         />
-        {/* <Fab
-          color="secondary"
-          size="small"
-          aria-label="delete"
-          onClick={() => props.onDelete(item._id)}>
-          <Delete />
-        </Fab> */}
       </FormGroup>
     </ListItem>
   )

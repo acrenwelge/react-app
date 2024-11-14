@@ -1,21 +1,32 @@
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import Container from '@mui/material/Container';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import FormGroup from '@mui/material/FormGroup';
 import TextField from '@mui/material/TextField';
 import { ColorPicker } from 'material-ui-color';
 import React, { useState } from 'react';
 
+import { Grid2 } from '@mui/material';
 import Board from './board';
 
+interface History {
+  squares: string[];
+  move: number[];
+}
+
+export interface Players {
+  p1: {name?: string, color: string, symbol: string};
+  p2: {name?: string, color: string, symbol: string};
+}
+
+export interface WinObj {
+  winner: keyof Players | null;
+  winSquares?: number[];
+}
+
 interface GameFormProps {
-  p1IsX: boolean;
   players: Players;
   startGame: (e: React.FormEvent) => void;
   handleFormChange: (val: string, playerId: keyof Players, playerProperty: keyof Players['p1']) => void;
-  toggleXOrO: (e: React.ChangeEvent) => void;
   formError: string | null;
 }
 
@@ -53,15 +64,6 @@ function GameForm(props: GameFormProps) {
           />
         </FormGroup>
         <FormGroup row>
-          <FormControlLabel
-            control={
-              <Checkbox data-testid='p1isx' checked={props.p1IsX} onChange={props.toggleXOrO} />
-            }
-            label="Player 1 is X"
-            color="secondary"
-          />
-        </FormGroup>
-        <FormGroup row>
           <Button
             type="submit" variant="contained"
             color="primary" id="game-form-submit">
@@ -74,16 +76,6 @@ function GameForm(props: GameFormProps) {
   );
 }
 
-interface History {
-  squares: string[];
-  move: number[];
-}
-
-interface Players {
-  p1: {name?: string, color: string};
-  p2: {name?: string, color: string};
-}
-
 function Game() {
   const [history, setHistory] = useState<History[]>([
     {
@@ -92,11 +84,10 @@ function Game() {
     }]);
   const [stepNumber, setStepNumber] = useState(0);
   const [players, setPlayers] = useState<Players>({
-    p1: {color: '#0000FF'},
-    p2: {color: '#FF0000'}
+    p1: {color: '#0000FF', symbol: 'X'},
+    p2: {color: '#FF0000', symbol: 'O'},
   });
-  const [p1IsX, setP1IsX] = useState(true);
-  const [xIsNext, setXIsNext] = useState(true);
+  const [P1IsNext, setP1IsNext] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -113,9 +104,7 @@ function Game() {
       setFormError(null);
     }
     setGameStarted(true);
-    if (!p1IsX) {
-      setXIsNext(false);
-    }
+    setP1IsNext(true);
   }
 
   const restart = (e: React.MouseEvent) => {
@@ -125,17 +114,20 @@ function Game() {
       move: [],
     }]);
     setStepNumber(0);
-    setXIsNext(p1IsX ? true : false);
+    setP1IsNext(true);
   }
 
-  // converting index of the square to [x,y] coordinates on the tic-tac-toe board
+  /** Converting index of the square to [x,y] coordinates on the tic-tac-toe board */
   const convertToCoords = (i: number) => {
     let x = i % 3;
     let y = Math.floor(i/3);
     return [x,y];
   }
 
-  const calculateWinner = (squares: string[]) => {
+  /**
+   * @returns undefined if there is no winner, otherwise returns the winner symbol and the winning squares
+   */
+  const calculateWinner = (squares: string[]): WinObj | undefined => {
     const lines = [
       [0, 1, 2],
       [3, 4, 5],
@@ -150,28 +142,28 @@ function Game() {
       const [a, b, c] = lines[i];
       if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
         return {
-          winner: squares[a],
+          winner: squares[a] === players.p1.symbol ? 'p1' : 'p2',
           winSquares: [a, b, c]
         }
       }
     }
     if (!squares.includes(null as any)) {
       return {
-        winner: null // draw!
+        winner: null, // draw!
+        winSquares: []
       }
     }
-    return null;
   }
 
-  const handleClick = (i: number) => {
+  const handleSquareClick = (i: number) => {
     const current = history[stepNumber];
     const squares = current.squares.slice();
     const [x,y] = convertToCoords(i);
-    if (calculateWinner(squares) != null || squares[i]) {
+    if (calculateWinner(squares) || squares[i]) {
       // do nothing if there is already a winner or the square is already filled
       return;
     }
-    squares[i] = xIsNext ? 'X' : 'O';
+    squares[i] = P1IsNext ? players.p1.symbol : players.p2.symbol;
     setHistory((history) => {
         return history.concat(
           {
@@ -180,14 +172,14 @@ function Game() {
           });
     });
     setStepNumber(history.length);
-    setXIsNext(prev => !prev);
+    setP1IsNext(prev => !prev);
   }
 
   const jumpTo = (step: number) => {
     setStepNumber(step);
     setHistory(history => history.slice(0, step + 1));
-    setXIsNext((old) => {
-      if (p1IsX) return (step % 2) === 0;
+    setP1IsNext((old) => {
+      if (P1IsNext) return (step % 2) === 0;
       else return (step % 2) !== 0;
     });
   }
@@ -200,24 +192,16 @@ function Game() {
     });
   }
 
-  const toggleXOrO = (e: React.ChangeEvent) => {
-    setP1IsX(old => !old);
-  }
-
   const current = history[history.length-1];
   const win = calculateWinner(current.squares);
 
   let status;
-  if (win && win.winner != null) {
-    let winner_name = players.p2.name;
-    if (win.winner === 'X' && p1IsX) {
-      winner_name = players.p1.name;
-    }
-    status = `The winner is ${winner_name} (${win.winner})`;
-  } else if (win && win.winner == null) {
+  if (win && win.winner) {
+    status = `The winner is ${players[win.winner].name} (${players[win.winner].symbol})!`;
+  } else if (win && !win.winner) {
     status = "The game is a draw!";
   } else {
-    status = `Next player: ${xIsNext ? 'X' : 'O'}`;
+    status = `Next player: ${P1IsNext ? players.p1.name : players.p2.name}`;
   }
 
   const moves = history.map((step, move) => {
@@ -237,37 +221,39 @@ function Game() {
 
   if (!gameStarted) {
     return (
-      <GameForm
-        p1IsX={p1IsX}
-        players={players}
-        startGame={startGame}
-        handleFormChange={handleFormChange}
-        toggleXOrO={toggleXOrO}
-        formError={formError}
-        />);
+      <Grid2 size={12}>
+        <GameForm
+          players={players}
+          startGame={startGame}
+          handleFormChange={handleFormChange}
+          formError={formError}
+          />
+      </Grid2>
+    );
   } else {
     return (
-      <Container maxWidth="sm">
+      <Grid2 container>
+      <Grid2 size={12} display="flex" justifyContent="center" alignItems="center">
         <h1>
           <span style={{color: players.p1.color}}>{players.p1.name}</span> vs <span style={{color: players.p2.color}}>{players.p2.name}</span>
         </h1>
-        <div className="game-board">
-          <Board
-            squares = {current.squares}
-            winObj = {win}
-            p1IsX={p1IsX}
-            players={players}
-            onClick = {handleClick}
-            />
+      </Grid2>
+      <Grid2 size={{xs: 12, sm: 8}} className="game-board" display="flex" justifyContent="center" alignItems="center">
+        <Board
+        squares = {current.squares}
+        winObj = {win}
+        players={players}
+        onClick = {handleSquareClick}
+        />
+      </Grid2>
+      <Grid2 size={{xs: 12, sm: 4}} className="game-info">
+        <div>
+          <Button onClick={restart}>New Game</Button>
         </div>
-        <div className="game-info">
-          <div>
-            <Button onClick={restart}>New Game</Button>
-          </div>
-          <div>{status}</div>
-          <ol>{moves}</ol>
-        </div>
-      </Container>
+        <div>{status}</div>
+        <ol>{moves}</ol>
+      </Grid2>
+      </Grid2>
     )
   }
 }
