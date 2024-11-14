@@ -1,6 +1,7 @@
 const cors = require('cors');
 const express = require('express');
 const Datastore = require('nedb');
+const logger = require('./logger');
 
 const app = express();
 app.use(cors());
@@ -16,11 +17,11 @@ let database = {};
  */
 function load_db(load_from_file) {
   if (load_from_file) {
-    console.log(`Loading db from ./db-todos.jsonl and ./db-users.jsonl`);
+    logger.info(`Loading db from ./db-todos.jsonl and ./db-users.jsonl`);
     database.todos = new Datastore({ filename: './db-todos.jsonl', autoload: true });
     database.users = new Datastore({ filename: './db-users.jsonl', autoload: true });
   } else {
-    console.log('No db file provided, using in-memory db');
+    logger.info('No db file provided, using in-memory db');
     database.todos = new Datastore();
     database.users = new Datastore();
   }
@@ -34,7 +35,7 @@ function get_db() {
 
 const handleResult = (err, res, docs) => {
   if (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).send();
   } else {
     res.send(docs);
@@ -43,7 +44,7 @@ const handleResult = (err, res, docs) => {
 
 // middleware that processes all requests
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
+  logger.verbose(`${req.method} ${req.path}`);
   next();
 });
 
@@ -70,7 +71,7 @@ app.post('/todos/batch', (req, res) => {
   }
   database.todos.insert(todos, (err, docs) => {
     if (err) {
-      console.error(err);
+      logger.error(err);
       res.status(500).send();
     } else {
       res.status(201).send(docs);
@@ -78,17 +79,26 @@ app.post('/todos/batch', (req, res) => {
   });
 });
 
-app.put('/todos/batch', (req, res) => {
+app.put('/todos/batch', async (req, res) => {
   const todos = req.body;
-  for (let todo of todos) {
-    console.log(`Completed: ${todo.completed}`);
-    database.todos.update({ _id: todo.id }, todo);
-    database.todos.find({ _id: todo.id }, (err, doc) => {
-      console.log(doc);
-    })
+  const updatedTodos = [];
+  try {
+    for (let todo of todos) {
+      await new Promise((resolve, reject) => {
+        database.todos.update({ _id: todo._id }, todo, {}, (err, numReplaced) => {
+          if (err) {return reject(err);}
+          database.todos.findOne({ _id: todo._id }, (err, updatedTodo) => {
+            if (err) { return reject(err);}
+            updatedTodos.push(updatedTodo);
+            resolve();
+          });
+        });
+      });
+    }
+    res.send(updatedTodos);
+  } catch (err) {
+    res.status(500).send(err);
   }
-  console.log(`Updated ${todos.length} todos`);
-  res.send(todos);
 });
 
 app.delete('/todos/batch', (req, res) => {
@@ -96,12 +106,12 @@ app.delete('/todos/batch', (req, res) => {
   for (let id of ids) {
     database.todos.remove({ _id: id})
   }
-  res.send(ids);
+  res.status(204).send();
 });
 
 app.get('/todos/:id', (req, res) => {
   const id = req.params.id;
-  database.todos.find({_id: id}, (err, docs) => handleResult(err, res, docs));
+  database.todos.find({_id: id}, (err, docs) => handleResult(err, res, docs[0]));
 });
 
 app.put('/todos/:id', (req, res) => {
@@ -116,7 +126,7 @@ app.put('/todos/:id', (req, res) => {
 app.delete('/todos/:id', (req, res) => {
   const id = req.params.id;
   database.todos.remove({ _id: id });
-  res.send();
+  res.status(204).send(); // NO CONTENT
 });
 
 module.exports = app;

@@ -58,6 +58,7 @@
 - ✅ json-server for mocking / testing
 - ✅ backend: REST API
 - ✅ backend: nedb (MongoDB-like database)
+- ✅ API tests
 
 ## Bugs Fixed
 
