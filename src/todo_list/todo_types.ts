@@ -15,7 +15,7 @@ export enum OperationType {
   Update = 'PUT'
 }
 
-export interface batchedTodo extends Item {
+export interface BatchedTodo extends Item {
   operation_type?: OperationType;
 }
 

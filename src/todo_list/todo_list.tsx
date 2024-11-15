@@ -11,6 +11,7 @@ import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Link,
   Redirect,
   Route,
   Switch as RouterSwitch, useLocation, useRouteMatch
@@ -20,7 +21,7 @@ import updateServer from './todo_api';
 import TodoItem from './todo_item';
 import TodoItemDetail from './todo_item_detail';
 import './todo_list.css';
-import { batchedTodo, Item, ItemAPI, OperationType } from './todo_types';
+import { BatchedTodo, Item, ItemAPI, OperationType } from './todo_types';
 
 dayjs.extend(isBetween);
 
@@ -31,15 +32,15 @@ const TIMEOUT = 1;
 const ALERT_TIMEOUT = 3;
 
 function TodoList(props: {}){
-  const [todos, updateTodos] = useState<Item[]>([]);
-  const [toItemDetail, updateToItemDetail] = useState<string | null>(null);
+  const [todos, setTodos] = useState<Item[]>([]);
+  const [toItemDetail, setToItemDetail] = useState<string | null>(null);
   const [newItemAdded, setNewItemAdded] = useState(false); // Used to focus on the new item
   const [modalOpen, setModalOpen] = useState(false);
   const [tags, setTags] = useState<Set<string>>(new Set());
   const lastTodoItemRef: React.MutableRefObject<HTMLInputElement | null> = useRef(null);
   let match = useRouteMatch();
 
-  /** Focuses on new todo when added so it can be edited */
+  /** Focuses on new item when added so it can be edited */
   useEffect(() => {
     if (newItemAdded && lastTodoItemRef.current) {
       lastTodoItemRef.current.click();
@@ -64,7 +65,7 @@ function TodoList(props: {}){
           parsedTodos.push(parsedTodo);
         }
         console.log('Fetched todos:', parsedTodos);
-        updateTodos(parsedTodos);
+        setTodos(parsedTodos);
         setTags(foundTags);
       } catch (error) {
         console.error('Error fetching todos:', error);
@@ -79,9 +80,9 @@ function TodoList(props: {}){
     }
 
   let addItem = (item: Item) => {
-      updateTodos((oldTodoList) => {
+      setTodos((oldTodoList) => {
         let newTodoList: Item[] = oldTodoList.slice();
-        const newbatchedTodoItem: batchedTodo = {
+        const newbatchedTodoItem: BatchedTodo = {
           ...item,
           operation_type: OperationType.Add
         };
@@ -96,9 +97,14 @@ function TodoList(props: {}){
 
   let priorityChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
     e.persist();
-    const newPriority = Number(e.target.value);
-    if (newPriority < 0 || newPriority > 3) return;
+    console.log('Priority change:', e.target.value);
+    let newPriority: number | null = Number(e.target.value);
+    if (newPriority === 0 || newPriority > 3) {
+      newPriority = null;
+    }
     const todoItem = todos.find(todo => todo._id === id);
+    if (todoItem!.priority === newPriority) { return; }
+    todoItem!.priority = newPriority;
     setBatchedTodos((batch) => {
       const batchTodo = batch.find(todo => todo._id === id);
       if (batchTodo) {
@@ -111,7 +117,7 @@ function TodoList(props: {}){
       }
       return batch;
     });
-    updateTodos(todos => {
+    setTodos(todos => {
       const newTodos = todos.map((todo) => {
         if (todo._id === id) {
           return {
@@ -139,13 +145,13 @@ function TodoList(props: {}){
         .map(todo => ({ ...todo, operation_type: OperationType.Delete }));
       return updatedBatch.concat(newCompletedTodos);
     });
-    updateTodos(state => {
+    setTodos(state => {
       return todos.filter(todo => {return !todo.completed});
     })
   }
 
   const updateTodoItem = (id: string, updatedFields: Partial<Item>) => {
-    updateTodos(oldTodos => {
+    setTodos(oldTodos => {
       return oldTodos.map(todo => {
         if (todo._id === id) {
           const updatedTodo = { ...todo, ...updatedFields };
@@ -153,7 +159,6 @@ function TodoList(props: {}){
           if (batchTodo) {
             Object.assign(batchTodo, updatedFields);
           } else {
-            // BUG: only first todo update is batched, subsequent updates are not batched
             setBatchedTodos(batch => batch.concat({
               ...updatedTodo,
               operation_type: OperationType.Update
@@ -212,14 +217,14 @@ function TodoList(props: {}){
 
   let todoTextKeyInput = (e: React.KeyboardEvent<HTMLInputElement>, id: string) => {
     // Add new item on Enter, toggle completed on Shift+Enter, view item details on Ctrl+Enter
-    // as long as the current todo text field is not empty (prevents adding empty todos)
+    // as long as the current item text field is not empty (prevents adding empty todos)
     if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim() !== '') {
       if (e.shiftKey) {
         e.preventDefault();
         toggleCompleted(id);
       } else if (e.ctrlKey) {
         e.preventDefault();
-        updateToItemDetail(id);
+        setToItemDetail(id);
       } else {
         e.preventDefault();
         addItem(getNewBlankItem());
@@ -232,12 +237,12 @@ function TodoList(props: {}){
   useEffect(() => {
     // Reset state when the route changes to a certain path
     if (location.pathname === "/todos") {
-      updateToItemDetail(null);
+      setToItemDetail(null);
     }
   }, [location]);
 
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
-  const [batchedTodos, setBatchedTodos] = useState<batchedTodo[]>([]);
+  const [batchedTodos, setBatchedTodos] = useState<BatchedTodo[]>([]);
   enum AlertSeverity {
     Success = 'success',
     Error = 'error'
@@ -322,7 +327,7 @@ function TodoList(props: {}){
       }
       return batch;
     });
-    updateTodos(todos => {
+    setTodos(todos => {
       return todos.filter(todo => todo._id !== id);
     });
   }
@@ -421,6 +426,11 @@ function TodoList(props: {}){
             </PaperDiv>
         </Modal>
       </Grid2>
+      <Grid2 size={12} display='flex' justifyContent='space-evenly'>
+        <Link to="/todos"><Button color='secondary'>List View</Button></Link>
+        <Link to="/todos"><Button color="secondary">Card View</Button></Link>
+        <Link to={`/todos/${todos[0]?._id}`}><Button color='secondary'>Detail View</Button></Link>
+      </Grid2>
       <Grid2 size={{xs: 12, sm: 6, lg: 4}}>
         <FormGroup>
           <TextField margin='dense' label="Search" onChange={searchFieldChange} />
@@ -509,17 +519,7 @@ function TodoList(props: {}){
           </Button>
         </FormControl>
       </Grid2>
-      <Snackbar open={alert.show} autoHideDuration={ALERT_TIMEOUT * 1000}
-        onClose={(event?: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
-          if (reason === 'clickaway') { return;}
-          setAlert({...alert, show: false});
-        }}>
-        <Alert
-          icon={<CheckIcon fontSize="inherit" />}
-          severity={alert.severity}>
-          {alert.message}
-        </Alert>
-      </Snackbar>
+      
     </Grid2>
   )
 
@@ -531,9 +531,20 @@ function TodoList(props: {}){
             {listView}
           </Route>
           <Route path={`${match.path}/:id`}>
-            <TodoItemDetail todos={todos} />
+            <TodoItemDetail todos={todos} updateTodos={updateTodoItem} tagOptions={Array.from(tags)}/>
           </Route>
         </RouterSwitch>
+        <Snackbar open={alert.show} autoHideDuration={ALERT_TIMEOUT * 1000}
+          onClose={(event?: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
+            if (reason === 'clickaway') { return;}
+            setAlert({...alert, show: false});
+          }}>
+          <Alert
+            icon={<CheckIcon fontSize="inherit" />}
+            severity={alert.severity}>
+            {alert.message}
+          </Alert>
+        </Snackbar>
     </React.Fragment>
   )
 }

@@ -44,7 +44,7 @@ const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
           label="priority"
           value={item.priority ?? ''}
           slotProps={
-            {htmlInput: {min: 1, max: 3}}
+            {htmlInput: {min: 0, max: 4}}
           }
           onChange={(e) => onItemPriorityChange(e as React.ChangeEvent<HTMLInputElement>,item._id)}
           />

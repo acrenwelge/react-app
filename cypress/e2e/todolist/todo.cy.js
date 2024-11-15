@@ -82,7 +82,7 @@ describe('My ToDo app', () => {
     })
   })
 
-  it('can view item details', () => {
+  it('can view item details with ctrl + enter', () => {
     cy.get(`${listitems} textarea`).then(($textareas) => {
       return cy.wrap($textareas.filter((index, element) => 
         element.value.includes('First task')
@@ -92,6 +92,36 @@ describe('My ToDo app', () => {
       cy.get('[data-testid="item-detail"]').should('exist')
     })
   })
+
+  context('with detail view open', () => {
+    beforeEach(() => {
+      cy.get('div.MuiGrid2-root:nth-child(3) > a:nth-child(3) > button:nth-child(1)').click()
+    })
+
+    it('can navigate to previous and next items', () => {
+      cy.contains('Previous').should('not.exist')
+      cy.contains('Next').click()
+      cy.contains('Previous').should('exist').click()
+    })
+
+    it('can edit an item from the detail view', () => {
+      cy.get('[data-testid="completion-status"]').invoke('text').then((oldText) => {
+        cy.get('[data-testid="completion-status"]').click().invoke('text').then((newText) => {
+          if (oldText === 'Status: Pending') {
+            expect(newText).to.equal('Status: Completed')
+          } else {
+            expect(newText).to.equal('Status: Pending')
+          }
+        })
+      })
+      cy.contains('Next').click()
+      cy.contains('Previous').click()
+    })
+
+    it.skip('can delete an item from the detail view', () => {
+      
+    })
+  });
 
   it('should sort items by priority ascending', () => {
     cy.get('#sort-select').click()

@@ -22,7 +22,7 @@
 - ✅ tags for todos
 - ✅ filter by tags
 - ✅ sort by tags
-- editable todo details page
+- ✅ editable todo details page
 - recurring todos
 - subtasks
 - offline mode
@@ -64,7 +64,6 @@
 
 - ✅ bug: text is copied to new todo
 - ✅ bug: batch update attempted even when no todos are updated
+- ✅ bug: only first update is saved
 
 ## Bugs Pending
-
-- bug: only first update is saved

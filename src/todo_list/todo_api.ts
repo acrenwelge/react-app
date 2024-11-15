@@ -1,11 +1,11 @@
 import { baseURL } from '..';
-import { batchedTodo, Item, OperationType } from './todo_types';
+import { BatchedTodo, Item, OperationType } from './todo_types';
 
 const httpHeaders = {
   'Content-Type': 'application/json',
 };
 
-const updateServer = async (batch: batchedTodo[]) => {
+const updateServer = async (batch: BatchedTodo[]) => {
   const sendBatch = async (todosToUpdate: Item[], method: OperationType) => {
     if (todosToUpdate.length > 0) {
       try {
@@ -15,12 +15,16 @@ const updateServer = async (batch: batchedTodo[]) => {
           body: JSON.stringify(todosToUpdate),
         });
       } catch (error) {
-        console.error(`Error ${method === OperationType.Add ? 'sending new' :
-          method === OperationType.Delete ? 'deleting' : 
-          'updating'} todos to the server:`, error);
+        let action = 'updating';
+        if (method === OperationType.Add) {
+          action = 'sending new';
+        } else if (method === OperationType.Delete) {
+          action = 'deleting';
+        }
+        console.error(`Error ${action} todos to the server:`, error);
       }
     }
-    return Promise.reject('No pending todo changes to send');
+    return Promise.reject(new Error('No pending todo changes to send'));
   };
 
   // separate by operation type then strip the unnecessary field before sending

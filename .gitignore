@@ -8,6 +8,10 @@
 
 # local database
 backend/*.jsonl
+# logs
+backend/*.log
+
+cypress/screenshots
 
 # testing
 /coverage

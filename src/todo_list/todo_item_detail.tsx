@@ -6,13 +6,15 @@ import LowPriorityIcon from '@mui/icons-material/LowPriority';
 import PendingIcon from '@mui/icons-material/Pending';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import StarIcon from '@mui/icons-material/Star';
-import { Alert, Chip, FormGroup, Grid2, Paper, TextField } from '@mui/material';
+import { Alert, Autocomplete, Chip, FormGroup, Grid2, Paper, TextField } from '@mui/material';
 import React, { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Item } from './todo_types';
 
 interface TodoItemDetailProps {
   todos: Item[];
+  tagOptions: string[];
+  updateTodos: (id: string, properties: Partial<Item>) => void;
 }
 
 function TodoItemDetail(props: TodoItemDetailProps) {
@@ -30,20 +32,26 @@ function TodoItemDetail(props: TodoItemDetailProps) {
     </Alert>)
   }
 
-  const priorityColor = todo.priority === 1 ? 'primary' : todo.priority === 2 ? 'secondary' : 'default';
+  let priorityColor: 'primary' | 'secondary' | 'default' = 'default';
+  if (todo.priority === 1) {
+    priorityColor = 'primary';
+  } else if (todo.priority === 2) {
+    priorityColor = 'secondary';
+  }
 
   const editText = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTodo({...todo, text: e.target.value});
+    props.updateTodos(id, {text: e.target.value});
   }
 
   const editPriority = (e: React.MouseEvent) => {
-    let newPriority: number | null = 3;
+    let newPriority: number | null;
     if (todo.priority === 3) {
       newPriority = null;
     } else {
       newPriority = todo.priority ? todo.priority + 1 : 1;
     }
-    setTodo({...todo, priority: newPriority});
+    const updatedTodo = {...todo, priority: newPriority};
+    props.updateTodos(id, updatedTodo);
   }
 
   return (
@@ -71,6 +79,7 @@ function TodoItemDetail(props: TodoItemDetailProps) {
           <Grid2 size={12}>
             <FormGroup row>
               <TextField
+                data-testid="item-text"
                 fullWidth
                 multiline
                 value={todo.text}
@@ -81,9 +90,11 @@ function TodoItemDetail(props: TodoItemDetailProps) {
           <Grid2 size={4}>
             <FormGroup row>
               {todo.completed ? <DoneIcon /> : <PendingIcon />}
-              <Chip label={`Status: ${todo.completed ? 'Completed':'Pending'}`} 
-              color={`${todo.completed ? 'primary':'default'}`} 
-              onClick={() => setTodo({...todo, completed: !todo.completed})}
+              <Chip 
+                data-testid="completion-status"
+                label={`Status: ${todo.completed ? 'Completed':'Pending'}`} 
+                color={`${todo.completed ? 'primary':'default'}`} 
+                onClick={() => props.updateTodos(id, {completed: !todo.completed})}
               />
             </FormGroup>
           </Grid2>
@@ -104,12 +115,31 @@ function TodoItemDetail(props: TodoItemDetailProps) {
               {todo.dueDate ? <Chip label={`Due: ${todo.dueDate.format("MM-DD-YYYY")}`} color="primary" /> : <Chip label={`Due: N/A`} color="default" />}
             </FormGroup>
           </Grid2>
-          <Grid2 size={12}>
+          <Grid2 size={12} rowGap={2}>
             <FormGroup row>
               <h3>Tags</h3>
             </FormGroup>
             <FormGroup row>
+              {todo.tags?.length === 0 && <Chip label="No tags" />}
               {todo.tags?.map(tag => <Chip color="info" key={tag} label={tag} />)}
+            </FormGroup>
+            <FormGroup row sx={{mt: 2}}>
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={props.tagOptions}
+                value={todo.tags || undefined}
+                sx={{width: '250px'}}
+                onChange={(e, newTags) => props.updateTodos(id, { tags: newTags })}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    label="work, home, etc."
+                  />
+                )}
+              />
             </FormGroup>
           </Grid2>
         </Grid2>

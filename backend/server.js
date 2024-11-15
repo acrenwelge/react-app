@@ -94,10 +94,16 @@ app.get('/todos/:id', (req, res) => {
 app.put('/todos/:id', (req, res) => {
   const id = req.params.id;
   const todo = req.body;
-  for (let key of Object.keys(todo)) {
-    database.todos.update({ _id: id }, { $set: { key: todo[key] } });
-  }
-  res.send(todo);
+  logger.info(`Updating todo with id ${id}`);
+  logger.info(JSON.stringify(todo));
+  database.todos.update({ _id: id }, todo, { returnUpdatedDocs: true }, (err, numReplaced, updatedDoc) => {
+    if (err) {
+      logger.error(err);
+      res.status(500).send();
+    } else {
+      res.send(updatedDoc);
+    }
+  });
 });
 
 app.delete('/todos/:id', (req, res) => {
