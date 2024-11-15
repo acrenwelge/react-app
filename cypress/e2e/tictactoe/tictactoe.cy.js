@@ -4,7 +4,7 @@ describe('TIC TAC TOE GAME', () => {
   const p1testname = 'Alice'
   const p2testname = 'Bob'
   beforeEach(() => {
-    cy.clearCookies()
+    // cy.clearCookies()
     localStorage.setItem('credentials', JSON.stringify({username: 'acrenwelge', pw: 'myrandompassword'}));
     cy.visit('http://localhost:3000/')
     cy.contains('Game').click()

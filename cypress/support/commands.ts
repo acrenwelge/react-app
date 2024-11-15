@@ -25,13 +25,35 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 //
-// declare global {
-//   namespace Cypress {
-//     interface Chainable {
-//       login(email: string, password: string): Chainable<void>
-//       drag(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       dismiss(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       visit(originalFn: CommandOriginalFn, url: string, options: Partial<VisitOptions>): Chainable<Element>
-//     }
-//   }
-// }
+export { }
+
+declare global {
+  namespace Cypress {
+    interface Chainable {
+      login(email: string, password: string): Chainable<void>
+      drag(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
+      dismiss(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
+      visit(originalFn: CommandOriginalFn<any>, url: string, options: Partial<VisitOptions>): Chainable<Element>
+      resetDatabase(): Chainable<void>
+      seedDatabase(): Chainable<void>
+      seedTestSpecificData(testName: string): Chainable<void>
+      cleanupTestSpecificData(testName: string): Chainable<void>
+    }
+  }
+}
+
+Cypress.Commands.add('resetDatabase', () => {
+  cy.request('POST', 'http://localhost:3000/test-data/reset');
+});
+
+Cypress.Commands.add('seedDatabase', () => {
+  cy.request('POST', 'http://localhost:3000/test-data/seed');
+});
+
+Cypress.Commands.add('seedTestSpecificData', (testName) => {
+  cy.request('POST', 'http://localhost:3000/test-data/seedForTest', { testName });
+});
+
+Cypress.Commands.add('cleanupTestSpecificData', (testName) => {
+  cy.request('POST', 'http://localhost:3000/test-data/cleanupForTest', { testName });
+});

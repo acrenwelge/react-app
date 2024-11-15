@@ -1,11 +1,18 @@
 const app = require('./server');
 const PORT = process.env.PORT || 3002;
 const logger = require('./logger');
+const testDataRoutes = require('./test/testDataRoutes');
+const load_db = require('./db');
 
 if (process.argv.length > 2 && process.argv[2] === '--persist') {
-  app.load_db(true);
+  load_db(true);
 } else {
-  app.load_db(false);
+  load_db(false);
+}
+
+if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
+  logger.info('Loading test data routes');
+  app.use('/test-data', testDataRoutes); // Load test data routes in test environment only
 }
 
 app.listen(PORT, () => {

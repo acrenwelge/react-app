@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "commonjs",
   "description": "Node.js server REST API for React todo and tictactoe app",
-  "main": "server.js",
+  "main": "startup.js",
   "scripts": {
     "test": "jest",
     "start": "node startup.js",

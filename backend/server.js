@@ -2,36 +2,13 @@ const cors = require('cors');
 const express = require('express');
 const Datastore = require('nedb');
 const logger = require('./logger');
+const load_db = require('./db');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-let database = {};
-
-/**
- * Initializes the document database.
- * Call this before starting the server.
- * @param load_from_file - reads from .jsonl files if true, otherwise uses in-memory db
- * @returns database object
- */
-function load_db(load_from_file) {
-  if (load_from_file) {
-    logger.info(`Loading db from ./db-todos.jsonl and ./db-users.jsonl`);
-    database.todos = new Datastore({ filename: './db-todos.jsonl', autoload: true });
-    database.users = new Datastore({ filename: './db-users.jsonl', autoload: true });
-  } else {
-    logger.info('No db file provided, using in-memory db');
-    database.todos = new Datastore();
-    database.users = new Datastore();
-  }
-  return database;
-}
-
-function get_db() {
-  if (!database) {throw new Error('Database not initialized');}
-  return database;
-}
+const database = load_db();
 
 const handleResult = (err, res, docs) => {
   if (err) {
@@ -130,5 +107,3 @@ app.delete('/todos/:id', (req, res) => {
 });
 
 module.exports = app;
-module.exports.load_db = load_db;
-module.exports.get_db = get_db;

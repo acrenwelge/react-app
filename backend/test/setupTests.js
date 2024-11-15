@@ -1,9 +1,11 @@
 const { get } = require('http');
 const app = require('../server');
+const load_db = require('../db');
+
+// Initialize the database in memory
+db = load_db(false);
 
 beforeAll(() => {
-  // Initialize the database
-  db = app.load_db(false);
   db.users.insert({"_id":"testuser","name":"Test User","email":"testuser@fakemail.com"});
 });
 
@@ -13,7 +15,6 @@ function generate_random_id() {
 
 beforeEach(() => {
   // clear the database
-  const db = app.get_db();
   db.todos.remove({}, { multi: true });
   // insert some test data
   db.todos.insert([

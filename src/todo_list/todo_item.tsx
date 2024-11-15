@@ -29,6 +29,7 @@ const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
           value={item._id}
           />
         <TextField type="text"
+          data-testid="item-text"
           variant="outlined"
           multiline
           value={item.text}
@@ -61,7 +62,6 @@ const TodoItem = forwardRef<HTMLInputElement, TodoItemProps>((props, ref) => {
           multiple
           freeSolo
           size="small"
-          id="tags-standard"
           options={tagOptions ?? []}
           value={item.tags || undefined}
           sx={{width: '250px'}}
