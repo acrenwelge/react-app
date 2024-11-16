@@ -23,8 +23,9 @@
 - ✅ filter by tags
 - ✅ sort by tags
 - ✅ editable todo details page
-- recurring todos
 - ✅ subtasks (these only have text and completion status)
+- user settings config: theme, font size, etc.
+- recurring todos
 - offline mode
 
 ### UI Improvement Ideas
@@ -45,11 +46,13 @@
 - ✅ color coding by player
 - ✅ allow players to select their color
 - save game results
+- see leaderboard of total wins
 - view previous game results
 - allow players to select their symbol
 - allow players to select their board size
 - allow players to select their win condition
 - allow players to select their game mode (classic, 3D, etc.)
+- user settings config: default symbol, default color, etc.
 
 ## Project Todos
 

@@ -3,6 +3,7 @@ const express = require('express');
 const Datastore = require('nedb');
 const logger = require('./logger');
 const load_db = require('./db');
+const gameRoutes = require('./gameRoutes');
 
 const app = express();
 app.use(cors());
@@ -24,6 +25,8 @@ app.use((req, res, next) => {
   logger.verbose(`${req.method} ${req.path}`);
   next();
 });
+
+app.use('/games', gameRoutes);
 
 app.get('/users', (req, res) => {
   database.users.find({}, (err, docs) => handleResult(err, res, docs));

@@ -21,6 +21,6 @@
     "jsx": "react"
   },
   "include": [
-    "**/*.ts",
+    "**/*.ts", "src/page_content.tsx",
   ]
 }

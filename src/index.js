@@ -17,8 +17,9 @@ import auth from './auth.ts';
 import './index.css';
 import LoginPage from './login_page.js';
 import NotFound from './not_found.js';
-import PageContent from './page_content.js';
+import PageContent from './page_content.tsx';
 import { Game } from './tictactoe/game';
+import Leaderboard from './tictactoe/leaderboard';
 import TodoItemDetail from './todo_list/todo_item_detail';
 import TodoList from './todo_list/todo_list';
 
@@ -70,6 +71,12 @@ export default function App() {
     </PageContent>
   );
 
+  const LeaderboardPage = (
+    <PageContent>
+      <Leaderboard />
+    </PageContent>
+  );
+
   return (
     <Router>
       <Switch>
@@ -91,6 +98,9 @@ export default function App() {
         <PrivateRoute path="/game">
           {GamePage }
         </PrivateRoute>
+        <Route exact path="/leaderboard">
+          {LeaderboardPage }
+        </Route>
         <Route path="*">
           <PageContent>
             <NotFound />

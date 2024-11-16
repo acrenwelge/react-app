@@ -1,7 +1,6 @@
 import AddIcon from '@mui/icons-material/Add';
-import CheckIcon from '@mui/icons-material/Check';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Alert, Checkbox, Divider, FormControl, FormControlLabel, FormGroup, Grid2, InputLabel, MenuItem, Select, Snackbar, SnackbarCloseReason, Switch, TextField } from '@mui/material';
+import { Checkbox, Divider, FormControl, FormControlLabel, FormGroup, Grid2, InputLabel, MenuItem, Select, Switch, TextField } from '@mui/material';
 import Button from '@mui/material/Button';
 import Fab from '@mui/material/Fab';
 import List from '@mui/material/List';
@@ -28,10 +27,9 @@ dayjs.extend(isBetween);
 // Code will attempt to update server with changes every TIMEOUT seconds
 // OR when the number of batched 'todos' updated equals BATCH_SIZE
 const BATCH_SIZE = 5;
-const TIMEOUT = 5;
-const ALERT_TIMEOUT = 3;
+const TIMEOUT = 3;
 
-function TodoList(props: {}){
+function TodoList(props: {triggerAlert: (message: string, severity: string) => void}) {
   const [todos, setTodos] = useState<Item[]>([]);
   const [toItemDetail, setToItemDetail] = useState<string | null>(null);
   const [newItemAdded, setNewItemAdded] = useState(false); // Used to focus on the new item
@@ -243,23 +241,13 @@ function TodoList(props: {}){
 
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   const [batchedTodos, setBatchedTodos] = useState<BatchedTodo[]>([]);
-  enum AlertSeverity {
-    Success = 'success',
-    Error = 'error'
-  }
-  const [alert, setAlert] = useState({
-    show: false,
-    severity: AlertSeverity.Success,
-    message: ''
-  });
 
   const handleHttpResponses = (responses: Response[]) => {
     setBatchedTodos([]);
     if (responses.every((r) => r.ok)) {
-      setAlert({ show: true, severity: AlertSeverity.Success, message: 'Changes saved' });
-      setTimeout(() => setAlert({...alert, show: false}), ALERT_TIMEOUT * 1000);
+      props.triggerAlert('success','Changes saved' );
     } else {
-      setAlert({ show: true, severity: AlertSeverity.Error, message: 'Error updating server' });
+      props.triggerAlert('error','Error updating server');
     }
   }
 
@@ -535,17 +523,6 @@ function TodoList(props: {}){
             <TodoItemDetail todos={todos} updateTodos={updateTodoItem} tagOptions={Array.from(tags)}/>
           </Route>
         </RouterSwitch>
-        <Snackbar open={alert.show} autoHideDuration={ALERT_TIMEOUT * 1000}
-          onClose={(event?: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
-            if (reason === 'clickaway') { return;}
-            setAlert({...alert, show: false});
-          }}>
-          <Alert
-            icon={<CheckIcon fontSize="inherit" />}
-            severity={alert.severity}>
-            {alert.message}
-          </Alert>
-        </Snackbar>
     </React.Fragment>
   )
 }

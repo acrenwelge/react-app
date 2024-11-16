@@ -6,7 +6,11 @@ import { ColorPicker } from 'material-ui-color';
 import React, { useState } from 'react';
 
 import { Grid2 } from '@mui/material';
+import axios from 'axios';
+import dayjs from 'dayjs';
+import { Link } from 'react-router-dom';
 import Board from './board';
+import GameResult from './gameResult';
 
 interface History {
   squares: string[];
@@ -72,11 +76,16 @@ function GameForm(props: GameFormProps) {
         </FormGroup>
         { props.formError && <Alert severity="error" data-testid="form-error-alert">{props.formError}</Alert> }
       </form>
+      <Link to="/leaderboard">Leaderboard</Link>
     </>
   );
 }
 
-function Game() {
+interface GameProps {
+  triggerAlert: (severity: 'success'|'error', message: string) => void;
+}
+
+function Game(props: GameProps) {
   const [history, setHistory] = useState<History[]>([
     {
       squares: Array(9).fill(null),
@@ -191,6 +200,29 @@ function Game() {
       return newPlayers;
     });
   }
+  
+  const saveGameResult = async () => {
+    const win = calculateWinner(history[history.length-1].squares);
+    const winner = win?.winner === 'p1' ? players.p1.name : players.p2.name;
+    const timestamp = dayjs(new Date());
+    const gameResult: GameResult = {
+      p1: players.p1.name!,
+      p2: players.p2.name!,
+      winner: win?.winner || 'draw',
+      timestamp: timestamp
+    };
+    axios.post('/games/gameResults', gameResult)
+      .catch((err) => {
+        props.triggerAlert('error', 'Save failed');
+        console.error(err);
+      })
+      .then((data) => {
+        if (data!.status < 300) {
+          props.triggerAlert('success', 'Game result saved');
+          console.log('Game result saved successfully');
+        }
+      })
+  }
 
   const current = history[history.length-1];
   const win = calculateWinner(current.squares);
@@ -233,26 +265,27 @@ function Game() {
   } else {
     return (
       <Grid2 container>
-      <Grid2 size={12} display="flex" justifyContent="center" alignItems="center">
-        <h1>
-          <span style={{color: players.p1.color}}>{players.p1.name}</span> vs <span style={{color: players.p2.color}}>{players.p2.name}</span>
-        </h1>
-      </Grid2>
-      <Grid2 size={{xs: 12, sm: 8}} className="game-board" display="flex" justifyContent="center" alignItems="center">
-        <Board
-        squares = {current.squares}
-        winObj = {win}
-        players={players}
-        onClick = {handleSquareClick}
-        />
-      </Grid2>
-      <Grid2 size={{xs: 12, sm: 4}} className="game-info">
-        <div>
-          <Button onClick={restart}>New Game</Button>
-        </div>
-        <div>{status}</div>
-        <ol>{moves}</ol>
-      </Grid2>
+        <Grid2 size={12} display="flex" justifyContent="center" alignItems="center">
+          <h1>
+            <span style={{color: players.p1.color}}>{players.p1.name}</span> vs <span style={{color: players.p2.color}}>{players.p2.name}</span>
+          </h1>
+        </Grid2>
+        <Grid2 size={{xs: 12, sm: 8}} className="game-board" display="flex" justifyContent="center" alignItems="center">
+          <Board
+          squares = {current.squares}
+          winObj = {win}
+          players={players}
+          onClick = {handleSquareClick}
+          />
+        </Grid2>
+        <Grid2 size={{xs: 12, sm: 4}} className="game-info">
+          <div>
+            <Button onClick={restart}>New Game</Button>
+          </div>
+          <div>{status}</div>
+          {win && <div><Button onClick={saveGameResult}>Save Game Result</Button></div>}
+          <ol>{moves}</ol>
+        </Grid2>
       </Grid2>
     )
   }

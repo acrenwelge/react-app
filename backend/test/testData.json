@@ -1,12 +1,19 @@
 {
   "users": [
     {"_id":"acrenwelge","name":"Andrew Crenwelge","email":"andrewcrenwelge@gmail.com"},
-    {"_id":"testuser","name":"Test User","email":"testuser@fakemail.com"}
+    {"_id":"testuser","name":"Test User","email":"testuser@fakemail.com"},
+    {"_id":"testuser2","name":"Test User 2","email":"testuser2@fakemail.com"}
+  ],
+  "games": [
+    {"_id":"1","p1":"acrenwelge","p2":"testuser","winner":"p1","timestamp":"2024-11-13T05:00:00.000Z"},
+    {"_id":"2","p1":"acrenwelge","p2":"testuser2","winner":"p2","timestamp":"2024-11-14T10:00:00.000Z"},
+    {"_id":"3","p1":"testuser","p2":"testuser2","winner":"draw","timestamp":"2024-11-15T09:00:00.000Z"}
   ],
   "todos": [
     {"_id":"E70UqqYDBUy9pBhO","text":"First task","completed":false,"priority":null},
-    {"_id":"UGvDNU6BkBoYQUYt","text":"Completed task","completed":true,"priority":1},
+    {"_id":"UGvDNU6BkBoYQUYt","text":"Completed high priority task","completed":true,"priority":1},
     {"_id":"dm7ytEKR9i5M36kx","text":"Low priority task","completed":true,"priority":3},
+    {"_id":"aior81EB1ZxpWWk3","text":"Task with subtasks","completed":false,"priority":null,"subtasks":[{"text":"Subtask 1","completed":true},{"text":"Subtask 2","completed":false}]},
     {"_id":"yxLjv5aLoocypwtm","text":"Work task","completed":false,"priority":2, "tags":["work"]}
   ]
 }
