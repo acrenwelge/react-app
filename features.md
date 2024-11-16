@@ -24,7 +24,7 @@
 - ✅ sort by tags
 - ✅ editable todo details page
 - recurring todos
-- subtasks
+- ✅ subtasks (these only have text and completion status)
 - offline mode
 
 ### UI Improvement Ideas
@@ -36,7 +36,7 @@
 - skeleton loading
 - drag and drop todos
 - inline editing
-- card view / list view toggle
+- card view / list view / calendar view toggle
 
 ## Tic Tac Toe Game
 

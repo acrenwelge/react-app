@@ -28,7 +28,7 @@ dayjs.extend(isBetween);
 // Code will attempt to update server with changes every TIMEOUT seconds
 // OR when the number of batched 'todos' updated equals BATCH_SIZE
 const BATCH_SIZE = 5;
-const TIMEOUT = 1;
+const TIMEOUT = 5;
 const ALERT_TIMEOUT = 3;
 
 function TodoList(props: {}){
@@ -402,8 +402,8 @@ function TodoList(props: {}){
     boxShadow: theme.shadows[5],
     padding: theme.spacing(2, 4, 3),
   }));
-  const listView = (
 
+  const listView = (
     <Grid2 container spacing={1} >
       <Grid2 size={12} display='flex' alignItems='center' justifyContent='center'>
         <h1>My Todos</h1>
@@ -430,6 +430,7 @@ function TodoList(props: {}){
         <Link to="/todos"><Button color='secondary'>List View</Button></Link>
         <Link to="/todos"><Button color="secondary">Card View</Button></Link>
         <Link to={`/todos/${todos[0]?._id}`}><Button color='secondary'>Detail View</Button></Link>
+        <Link to="/todos"><Button color="secondary">Calendar View</Button></Link>
       </Grid2>
       <Grid2 size={{xs: 12, sm: 6, lg: 4}}>
         <FormGroup>

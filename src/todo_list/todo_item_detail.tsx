@@ -6,7 +6,8 @@ import LowPriorityIcon from '@mui/icons-material/LowPriority';
 import PendingIcon from '@mui/icons-material/Pending';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import StarIcon from '@mui/icons-material/Star';
-import { Alert, Autocomplete, Chip, FormGroup, Grid2, Paper, TextField } from '@mui/material';
+import { Alert, Autocomplete, Button, Checkbox, Chip, FormGroup, Grid2, List, ListItem, Paper, TextField } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
 import React, { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Item } from './todo_types';
@@ -21,6 +22,7 @@ function TodoItemDetail(props: TodoItemDetailProps) {
   let { id } = useParams<{ id: string }>();
   const currentIndex = props.todos.findIndex(todo => todo._id === id);
   const [todo, setTodo] = React.useState<Item | undefined>(props.todos.find(todo => todo._id === id));
+  const [openDatePicker, setOpenDatePicker] = React.useState(false);
 
   useEffect(() => {
     setTodo(props.todos.find(todo => todo._id === id));
@@ -75,7 +77,7 @@ function TodoItemDetail(props: TodoItemDetailProps) {
       </Grid2>
       <Paper elevation={3} sx={{padding: '10px', marginTop: '5px'}}>
         <h2>Task Details</h2>
-        <Grid2 container rowSpacing={3}>
+        <Grid2 container rowSpacing={1}>
           <Grid2 size={12}>
             <FormGroup row>
               <TextField
@@ -112,10 +114,25 @@ function TodoItemDetail(props: TodoItemDetailProps) {
           <Grid2 size={4}>
             <FormGroup row>
               <CalendarMonthIcon />
-              {todo.dueDate ? <Chip label={`Due: ${todo.dueDate.format("MM-DD-YYYY")}`} color="primary" /> : <Chip label={`Due: N/A`} color="default" />}
+              {!openDatePicker && <Chip
+                onClick={() => setOpenDatePicker(true)}
+                label={todo.dueDate ? `Due: ${todo.dueDate.format("MM-DD-YYYY")}` : 'Due: N/A'}
+                color={todo.dueDate ? "primary" : "default"} 
+              />}
+              {openDatePicker && <DatePicker
+                  sx={{minWidth: '50px', maxWidth: '150px'}}
+                  label="Due Date"
+                  value={todo.dueDate || null}
+                  onChange={(val, ctx) => {
+                    if (!ctx.validationError) {
+                      props.updateTodos(id, { dueDate: val || undefined });
+                      setOpenDatePicker(false);
+                    }
+                  }}
+              />}
             </FormGroup>
           </Grid2>
-          <Grid2 size={12} rowGap={2}>
+          <Grid2 size={12}>
             <FormGroup row>
               <h3>Tags</h3>
             </FormGroup>
@@ -141,6 +158,52 @@ function TodoItemDetail(props: TodoItemDetailProps) {
                 )}
               />
             </FormGroup>
+          </Grid2>
+          <Grid2 size={12}>
+            <h3>Subtasks</h3>
+            <List className="todo-list">
+              {todo.subtasks?.map((subtask, idx) => {
+                return (<ListItem>
+                <Checkbox checked={subtask.completed}
+                  value={idx}
+                  onChange={() => {
+                    const updatedSubtask = {...subtask, completed: !subtask.completed};
+                    const newSubtasks = [...todo.subtasks!];
+                    newSubtasks[idx] = updatedSubtask;
+                    props.updateTodos(id, {subtasks: newSubtasks});
+                  }}
+                />
+                <TextField type="text" value={subtask.text}
+                  slotProps={{htmlInput: { className: `${subtask.completed ? 'item-done' :''}`}}}
+                  onChange={(e) => {
+                    const updatedSubtask = {...subtask, text: e.target.value};
+                    const newSubtasks = [...todo.subtasks!];
+                    newSubtasks[idx] = updatedSubtask;
+                    props.updateTodos(id, {subtasks: newSubtasks});
+                  }}
+                />
+                </ListItem>)
+              })}
+            </List>
+          </Grid2>
+          <Grid2 size={12}>
+            <Button color="primary" onClick={() => {
+              if (!todo.subtasks) {
+                props.updateTodos(id, {subtasks: [{text: '', completed: false}]});
+                return;
+              }
+              const newSubtasks = [...todo.subtasks!, {text: '', completed: false}];
+              props.updateTodos(id, {subtasks: newSubtasks});
+            }}>
+              Add Subtask
+            </Button>
+            <Button color="secondary" onClick={() => {
+              if (!todo.subtasks) {return;}
+              const newSubtasks = todo.subtasks.filter(subtask => !subtask.completed);
+              props.updateTodos(id, {subtasks: newSubtasks});
+            }}>
+              Clear Completed Subtasks
+            </Button>
           </Grid2>
         </Grid2>
       </Paper>
