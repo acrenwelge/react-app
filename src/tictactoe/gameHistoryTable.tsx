@@ -11,7 +11,7 @@ import GameResult from './gameResult';
 
 function GameHistoryTable(props: {games: GameResult[]}) {
   return (
-    <TableContainer component={Paper}>
+    <TableContainer component={Paper} elevation={6}>
       <Table sx={{ minWidth: 650 }} aria-label="simple table">
         <TableHead>
           <TableRow>

@@ -1,10 +1,11 @@
 import { Grid2 } from '@mui/material';
 import React from 'react';
 import './board.css';
-import { Players, WinObj } from './game';
+import { GameConfig, Players, WinObj } from './game';
 import Square from './square';
 
 interface BoardProps {
+  gameConfig: GameConfig;
   squares: string[];
   onClick: (i: number) => void;
   winObj?: WinObj;
@@ -13,28 +14,28 @@ interface BoardProps {
 
 export default class Board extends React.Component<BoardProps> {
 
-  renderSquare(i: number, highlight: boolean) {
-    console.log(this.props.players);
-    let textHexColor = this.props.players.p2.color;
-    if (this.props.squares[i] === this.props.players.p1.symbol) {
-      textHexColor = this.props.players.p1.color;
+  renderSquare(idx: number, highlight: boolean) {
+    console.log(this.props.players.p1.color.hex);
+    let textHexColor = this.props.players.p2.color.hex;
+    if (this.props.squares[idx] === this.props.players.p1.symbol) {
+      textHexColor = this.props.players.p1.color.hex;
     }
     return (
       <Square
-      key={i}
-      symbol={this.props.squares[i]}
+      key={idx}
+      symbol={this.props.squares[idx]}
       highlight={highlight}
-      textHexColor={textHexColor}
-      onClick={() => this.props.onClick(i)}/>
+      textHexColor={'#'+textHexColor}
+      onClick={() => this.props.onClick(idx)}/>
       )
   }
 
   render() {
     let divs = [];
-    for (let i=0;i<3;i++) {
+    for (let i = 0; i < this.props.gameConfig.boardSize; i++) {
       let sqrs = [];
-      for (let j=0;j<3;j++) {
-        const idx = i*3 + j;
+      for (let j = 0; j < this.props.gameConfig.boardSize; j++) {
+        const idx = i * this.props.gameConfig.boardSize + j;
         const winObj = this.props.winObj;
         if (winObj && winObj.winSquares && winObj.winSquares.includes(idx)) {
           sqrs.push(this.renderSquare(idx, true));

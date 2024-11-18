@@ -32,12 +32,15 @@
 
 - select app theme
 - green text for completed todos; red for overdue
+- change text color when complete instead of strike-through
+- navbar should be full width, content should be narrower
 - lighten the background when color coding by priority
 - pagination (user can set items per page)
 - skeleton loading
 - drag and drop todos
-- inline editing
-- card view / list view / calendar view toggle
+- datepicker disappears when clicking outside on detail view
+- card view / list view / detail view / calendar view toggle
+- keyboard shortcut for navigating detail view
 
 ## Tic Tac Toe Game
 
@@ -45,13 +48,14 @@
 - ✅ simple tic-tac-toe game
 - ✅ color coding by player
 - ✅ allow players to select their color
-- save game results
-- see leaderboard of total wins
-- view previous game results
-- allow players to select their symbol
-- allow players to select their board size
-- allow players to select their win condition
+- ✅ save game results
+- ✅ see leaderboard of total wins
+- ✅ view previous game results
+- ✅ allow players to select their symbol
+- ✅ allow players to select their board size
+- ✅ allow players to select their win condition
 - allow players to select their game mode (classic, 3D, etc.)
+- keep the board in the same position (right now it drifts down as more plays are made)
 - user settings config: default symbol, default color, etc.
 
 ## Project Todos
@@ -69,4 +73,7 @@
 - ✅ bug: batch update attempted even when no todos are updated
 - ✅ bug: only first update is saved
 
-## Bugs Pending
+## Defect Backlog
+
+- bug: game can be saved multiple times
+- bug: when going to a move, player can go twice in a row (next move does not get reset)

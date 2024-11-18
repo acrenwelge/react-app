@@ -1,14 +1,10 @@
 import { Grid2 } from '@mui/material';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import GameTable from './gameHistoryTable';
 import GameResult from './gameResult';
-
-const leaderboard = [
-  { player: 'Alice', wins: 10 },
-  { player: 'Charlie', wins: 8 },
-  { player: 'Bob', wins: 5 },
-];
 
 interface LeaderboardResult {
   player: string;
@@ -18,7 +14,7 @@ interface LeaderboardResult {
 const Leaderboard: React.FC = () => {
   const [gameHistory, setGameHistory] = useState<GameResult[]>([]);
 
-  const playerWins: LeaderboardResult[] = [];
+  const sortedPlayerWins: LeaderboardResult[] = [];
 
   for (const game of gameHistory) {
     if (game.winner === 'draw') {
@@ -32,12 +28,13 @@ const Leaderboard: React.FC = () => {
     } else {
       winner_name = 'Draw';
     }
-    const player = playerWins.find((player) => player.player === winner_name);
+    const player = sortedPlayerWins.find((player) => player.player === winner_name);
     if (player) {
       player.wins++;
     } else {
-      playerWins.push({ player: winner_name, wins: 1 });
+      sortedPlayerWins.push({ player: winner_name, wins: 1 });
     }
+    sortedPlayerWins.sort((a, b) => b.wins - a.wins);
   }
 
   useEffect(() => {
@@ -53,20 +50,20 @@ const Leaderboard: React.FC = () => {
   }, []);
 
   return (
-    <Grid2 container>
+    <Grid2 container display="flex" justifyContent="center">
       <Grid2>
         <h2>Game History</h2>
         <GameTable games={gameHistory} />
       </Grid2>
-      <Grid2>
+      <Grid2 sx={{ml: 10}}>
         <h2>Leaderboard</h2>
-        <ul>
-          {playerWins.map((obj, index) => (
-            <li key={index}>
+        <List>
+          {sortedPlayerWins.map((obj, index) => (
+            <ListItem key={index}>
               {obj.player}: {obj.wins} wins
-            </li>
+            </ListItem>
           ))}
-        </ul>
+        </List>
       </Grid2>
     </Grid2>
   );
