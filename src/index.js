@@ -20,10 +20,8 @@ import NotFound from './not_found.js';
 import PageContent from './page_content.tsx';
 import { Game } from './tictactoe/game';
 import Leaderboard from './tictactoe/leaderboard';
-import TodoItemDetail from './todo_list/todo_item_detail';
-import TodoList from './todo_list/todo_list';
-
-export const baseURL = 'http://localhost:3002';
+import TodoItemDetail from './todo_list/TodoItemDetail.tsx';
+import TodoListContainer from './todo_list/TodoListContainer';
 
 const theme = createTheme({
   palette: {
@@ -61,7 +59,7 @@ function PrivateRoute({ children, ...rest }) {
 export default function App() {
   const TodoListPage = (
       <PageContent>
-          <TodoList />
+        <TodoListContainer />
       </PageContent>
   );
 

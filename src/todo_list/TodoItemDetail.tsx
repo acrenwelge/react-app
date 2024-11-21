@@ -10,7 +10,7 @@ import { Alert, Autocomplete, Button, Checkbox, Chip, FormGroup, Grid2, List, Li
 import { DatePicker } from '@mui/x-date-pickers';
 import React, { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Item } from './todo_types';
+import { Item } from './todoTypes';
 
 interface TodoItemDetailProps {
   todos: Item[];

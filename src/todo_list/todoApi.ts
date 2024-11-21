@@ -1,9 +1,10 @@
-import { baseURL } from '..';
-import { BatchedTodo, Item, OperationType } from './todo_types';
+import { BatchedTodo, Item, OperationType } from './todoTypes';
 
 const httpHeaders = {
   'Content-Type': 'application/json',
 };
+
+const baseURL = process.env.REACT_APP_API_URL;
 
 const updateServer = async (batch: BatchedTodo[]) => {
   const sendBatch = async (todosToUpdate: Item[], method: OperationType) => {

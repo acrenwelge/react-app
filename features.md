@@ -38,7 +38,6 @@
 - pagination (user can set items per page)
 - skeleton loading
 - drag and drop todos
-- datepicker disappears when clicking outside on detail view
 - card view / list view / detail view / calendar view toggle
 - keyboard shortcut for navigating detail view
 
@@ -55,8 +54,6 @@
 - ✅ allow players to select their board size
 - ✅ allow players to select their win condition
 - allow players to select their game mode (classic, 3D, etc.)
-- keep the board in the same position (right now it drifts down as more plays are made)
-- user settings config: default symbol, default color, etc.
 
 ## Project Todos
 
@@ -66,6 +63,7 @@
 - ✅ backend: REST API
 - ✅ backend: nedb (MongoDB-like database)
 - ✅ API tests
+- unit tests
 
 ## Bugs Fixed
 

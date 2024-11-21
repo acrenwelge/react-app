@@ -26,7 +26,7 @@
     "start:backend": "cd backend && npm start",
     "start:mock": "react-scripts start && json-server --watch db.json --port 3001",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "NODE_OPTIONS=--experimental-vm-modules react-scripts test",
     "eject": "react-scripts eject",
     "tsc": "tsc",
     "watch": "tsc --watch"

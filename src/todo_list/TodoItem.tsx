@@ -2,7 +2,7 @@ import { Autocomplete, Checkbox, FormGroup, ListItem, TextField } from "@mui/mat
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import React, { forwardRef } from "react";
-import { Item } from "./todo_types";
+import { Item } from "./todoTypes";
 
 interface TodoItemProps {
   item: Item;

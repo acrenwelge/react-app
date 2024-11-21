@@ -15,12 +15,11 @@ import {
   Route,
   Switch as RouterSwitch, useLocation, useRouteMatch
 } from 'react-router-dom';
-import { baseURL } from '..';
-import updateServer from './todo_api';
-import TodoItem from './todo_item';
-import TodoItemDetail from './todo_item_detail';
-import './todo_list.css';
-import { BatchedTodo, Item, ItemAPI, OperationType } from './todo_types';
+import updateServer from './todoApi';
+import TodoItem from './TodoItem';
+import TodoItemDetail from './TodoItemDetail';
+import './todoList.css';
+import { BatchedTodo, Item, OperationType } from './todoTypes';
 
 dayjs.extend(isBetween);
 
@@ -29,12 +28,18 @@ dayjs.extend(isBetween);
 const BATCH_SIZE = 5;
 const TIMEOUT = 3;
 
-function TodoList(props: {triggerAlert: (message: string, severity: string) => void}) {
-  const [todos, setTodos] = useState<Item[]>([]);
+interface TodoListProps {
+  todos: Item[];
+  tags: Set<string>;
+  onUpdateTodos: (todos: Item[]) => void;
+  triggerAlert: (message: string, severity: string) => void;
+}
+
+function TodoList(props: TodoListProps) {
+  const {todos, tags, onUpdateTodos, triggerAlert} = props;
   const [toItemDetail, setToItemDetail] = useState<string | null>(null);
   const [newItemAdded, setNewItemAdded] = useState(false); // Used to focus on the new item
   const [modalOpen, setModalOpen] = useState(false);
-  const [tags, setTags] = useState<Set<string>>(new Set());
   const lastTodoItemRef: React.MutableRefObject<HTMLInputElement | null> = useRef(null);
   let match = useRouteMatch();
 
@@ -46,51 +51,23 @@ function TodoList(props: {triggerAlert: (message: string, severity: string) => v
     }
   }, [newItemAdded]);
 
-  useEffect(() => {
-    const fetchTodos = async () => {
-      try {
-        const response = await fetch(`${baseURL}/todos`);
-        const rawTodos: ItemAPI[] = await response.json();
-        let foundTags = new Set<string>();
-        let parsedTodos: Item[] = [];
-        for (const todo of rawTodos) {
-          if (todo.tags) {
-            for (const tag of todo.tags) {
-              foundTags.add(tag);
-            }
-          }
-          const parsedTodo = {...todo, dueDate: todo.dueDate ? dayjs(todo.dueDate) : undefined};
-          parsedTodos.push(parsedTodo);
-        }
-        console.log('Fetched todos:', parsedTodos);
-        setTodos(parsedTodos);
-        setTags(foundTags);
-      } catch (error) {
-        console.error('Error fetching todos:', error);
-      }
-    };
-    fetchTodos();
-  }, []); // Empty dependency array, runs once on mount
-
   let addItemBtnClick = (e: React.MouseEvent) => {
       e.persist();
       addItem(getNewBlankItem());
     }
 
   let addItem = (item: Item) => {
-      setTodos((oldTodoList) => {
-        let newTodoList: Item[] = oldTodoList.slice();
-        const newbatchedTodoItem: BatchedTodo = {
-          ...item,
-          operation_type: OperationType.Add
-        };
-        setBatchedTodos((batch) => {
-          return batch.concat(newbatchedTodoItem);
-        });
-        newTodoList.push(item);
-        setNewItemAdded(true);
-        return newTodoList;
+      let newTodoList: Item[] = todos.slice();
+      const newbatchedTodoItem: BatchedTodo = {
+        ...item,
+        operation_type: OperationType.Add
+      };
+      setBatchedTodos((batch) => {
+        return batch.concat(newbatchedTodoItem);
       });
+      newTodoList.push(item);
+      setNewItemAdded(true);
+      onUpdateTodos(todos);
     }
 
   let priorityChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
@@ -115,19 +92,17 @@ function TodoList(props: {triggerAlert: (message: string, severity: string) => v
       }
       return batch;
     });
-    setTodos(todos => {
-      const newTodos = todos.map((todo) => {
-        if (todo._id === id) {
-          return {
-            ...todo,
-            priority: newPriority
-          }
-        } else {
-          return todo;
+    const newTodos = todos.map((todo: Item) => {
+      if (todo._id === id) {
+        return {
+          ...todo,
+          priority: newPriority
         }
-      });
-      return newTodos;
-    })
+      } else {
+        return todo;
+      }
+    });
+    onUpdateTodos(newTodos);
   }
 
   let removeCompleted = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -143,30 +118,27 @@ function TodoList(props: {triggerAlert: (message: string, severity: string) => v
         .map(todo => ({ ...todo, operation_type: OperationType.Delete }));
       return updatedBatch.concat(newCompletedTodos);
     });
-    setTodos(state => {
-      return todos.filter(todo => {return !todo.completed});
-    })
+    onUpdateTodos(todos.filter(todo => !todo.completed));
   }
 
   const updateTodoItem = (id: string, updatedFields: Partial<Item>) => {
-    setTodos(oldTodos => {
-      return oldTodos.map(todo => {
-        if (todo._id === id) {
-          const updatedTodo = { ...todo, ...updatedFields };
-          const batchTodo = batchedTodos.find(todo => todo._id === id);
-          if (batchTodo) {
-            Object.assign(batchTodo, updatedFields);
-          } else {
-            setBatchedTodos(batch => batch.concat({
-              ...updatedTodo,
-              operation_type: OperationType.Update
-            }));
-          }
-          return updatedTodo;
+    const newTodos = todos.map(todo => {
+      if (todo._id === id) {
+        const updatedTodo = { ...todo, ...updatedFields };
+        const batchTodo = batchedTodos.find(todo => todo._id === id);
+        if (batchTodo) {
+          Object.assign(batchTodo, updatedFields);
+        } else {
+          setBatchedTodos(batch => batch.concat({
+            ...updatedTodo,
+            operation_type: OperationType.Update
+          }));
         }
-        return todo;
-      });
+        return updatedTodo;
+      }
+      return todo;
     });
+    onUpdateTodos(newTodos);
   };
 
   const editItemText = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
@@ -245,9 +217,9 @@ function TodoList(props: {triggerAlert: (message: string, severity: string) => v
   const handleHttpResponses = (responses: Response[]) => {
     setBatchedTodos([]);
     if (responses.every((r) => r.ok)) {
-      props.triggerAlert('success','Changes saved' );
+      triggerAlert('success','Changes saved' );
     } else {
-      props.triggerAlert('error','Error updating server');
+      triggerAlert('error','Error updating server');
     }
   }
 
@@ -270,11 +242,11 @@ function TodoList(props: {triggerAlert: (message: string, severity: string) => v
       // if there are pending changes, set a timer to update the server
       const newTimer = setTimeout(() => {
         if (batchedTodos.length === 0) return;
-        updateServer(batchedTodos).then((responses: Response[]) => {
-          handleHttpResponses(responses);
-        }).catch((error) => {
-          console.error('Error updating server:', error);
-        });
+        updateServer(batchedTodos)
+          .then(handleHttpResponses)
+          .catch((error) => {
+            console.error('Error updating server:', error);
+          });
         setTimer(null);
       }, TIMEOUT * 1000);
       setTimer(newTimer);
@@ -315,9 +287,7 @@ function TodoList(props: {triggerAlert: (message: string, severity: string) => v
       }
       return batch;
     });
-    setTodos(todos => {
-      return todos.filter(todo => todo._id !== id);
-    });
+    onUpdateTodos(todos.filter(todo => todo._id !== id));
   }
 
   const filteredTodos = todos.map((entry, idx) => {
