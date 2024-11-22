@@ -3,8 +3,8 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import GameTable from './gameHistoryTable';
-import GameResult from './gameResult';
+import GameTable from './GameHistoryTable';
+import GameResult from './GameResult';
 
 interface LeaderboardResult {
   player: string;

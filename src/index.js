@@ -15,11 +15,11 @@ import {
 } from "react-router-dom";
 import auth from './auth.ts';
 import './index.css';
-import LoginPage from './login_page.js';
-import NotFound from './not_found.js';
-import PageContent from './page_content.tsx';
-import { Game } from './tictactoe/game';
-import Leaderboard from './tictactoe/leaderboard';
+import LoginPage from './LoginPage.js';
+import NotFound from './NotFound.js';
+import PageContent from './PageContent.tsx';
+import Game from './tictactoe/Game.tsx';
+import Leaderboard from './tictactoe/Leaderboard.tsx';
 import TodoItemDetail from './todo_list/TodoItemDetail.tsx';
 import TodoListContainer from './todo_list/TodoListContainer';
 

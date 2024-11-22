@@ -1,8 +1,8 @@
 import { Grid2 } from '@mui/material';
 import React from 'react';
 import './board.css';
-import { GameConfig, Players, WinObj } from './game';
-import Square from './square';
+import { GameConfig, Players, WinObj } from './Game';
+import Square from './Square';
 
 interface BoardProps {
   gameConfig: GameConfig;

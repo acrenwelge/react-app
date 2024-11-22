@@ -7,7 +7,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import dayjs from 'dayjs';
 import * as React from 'react';
-import GameResult from './gameResult';
+import GameResult from './GameResult';
 
 function GameHistoryTable(props: {games: GameResult[]}) {
   return (

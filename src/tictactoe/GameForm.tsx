@@ -2,7 +2,7 @@ import { Alert, Box, Button, FormControl, FormGroup, Grid2, InputLabel, MenuItem
 import { Color, ColorPicker } from "material-ui-color";
 import React from "react";
 import { Link } from "react-router-dom";
-import { GameConfig, Players } from "./game";
+import { GameConfig, Players } from "./Game";
 
 interface GameFormProps {
   players: Players;

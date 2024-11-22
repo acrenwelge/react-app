@@ -5,9 +5,9 @@ import React, { useState } from 'react';
 import { Box, Grid2, List, ListItem } from '@mui/material';
 import axios from 'axios';
 import dayjs from 'dayjs';
-import Board from './board';
-import GameForm from './gameForm';
-import GameResult from './gameResult';
+import Board from './Board';
+import GameForm from './GameForm';
+import GameResult from './GameResult';
 
 interface History {
   squares: string[];
@@ -33,7 +33,7 @@ export interface GameConfig {
   winLength: number;
 }
 
-function Game(props: GameProps) {
+export default function Game(props: GameProps) {
   const [stepNumber, setStepNumber] = useState(0);
   const [players, setPlayers] = useState<Players>({
     p1: {color: createColor("#0000FF"), symbol: 'X'},

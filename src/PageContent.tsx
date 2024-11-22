@@ -3,7 +3,7 @@ import { Alert, Snackbar, SnackbarCloseReason } from '@mui/material';
 import Container from '@mui/material/Container';
 import Grid2 from '@mui/material/Grid2';
 import React, { useState } from 'react';
-import Navbar from './navbar.js';
+import Navbar from './Navbar.js';
 
 /**
  Container component for rendering pages
