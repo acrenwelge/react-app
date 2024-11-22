@@ -24,7 +24,7 @@
 - ✅ sort by tags
 - ✅ editable todo details page
 - ✅ subtasks (these only have text and completion status)
-- user settings config: theme, font size, etc.
+- ✅ user settings config: theme, font size, etc.
 - recurring todos
 - offline mode
 

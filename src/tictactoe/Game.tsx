@@ -33,7 +33,7 @@ export interface GameConfig {
   winLength: number;
 }
 
-export default function Game(props: GameProps) {
+export default function Game(props: Readonly<GameProps>) {
   const [stepNumber, setStepNumber] = useState(0);
   const [players, setPlayers] = useState<Players>({
     p1: {color: createColor("#0000FF"), symbol: 'X'},
@@ -211,7 +211,7 @@ export default function Game(props: GameProps) {
     const gameResult: GameResult = {
       p1: players.p1.name!,
       p2: players.p2.name!,
-      winner: win?.winner || 'draw',
+      winner: win?.winner ?? 'draw',
       timestamp: timestamp
     };
     axios.post('/games/gameResults', gameResult)
@@ -231,7 +231,7 @@ export default function Game(props: GameProps) {
   const win = calculateWinner(current.squares);
 
   let status;
-  if (win && win.winner) {
+  if (win?.winner) {
     status = `The winner is ${players[win.winner].name} (${players[win.winner].symbol})!`;
   } else if (win && !win.winner) {
     status = "The game is a draw!";

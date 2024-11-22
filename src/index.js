@@ -13,26 +13,17 @@ import {
   BrowserRouter as Router,
   Switch
 } from "react-router-dom";
-import auth from './auth.ts';
+import auth from './auth';
 import './index.css';
-import LoginPage from './LoginPage.js';
-import NotFound from './NotFound.js';
-import PageContent from './PageContent.tsx';
-import Game from './tictactoe/Game.tsx';
-import Leaderboard from './tictactoe/Leaderboard.tsx';
-import TodoItemDetail from './todo_list/TodoItemDetail.tsx';
+import LoginPage from './LoginPage';
+import NotFound from './NotFound';
+import PageContent from './PageContent';
+import Settings from './Settings';
+import { colorThemeOptions, typographyThemeOptions } from './themeOptions';
+import Game from './tictactoe/Game';
+import Leaderboard from './tictactoe/Leaderboard';
+import TodoItemDetail from './todo_list/TodoItemDetail';
 import TodoListContainer from './todo_list/TodoListContainer';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#2196f3",
-    },
-    secondary: {
-      main: '#f44336',
-    },
-  },
-});
 
 
 function PrivateRoute({ children, ...rest }) {
@@ -57,22 +48,48 @@ function PrivateRoute({ children, ...rest }) {
 }
 
 export default function App() {
-  const TodoListPage = (
+  const [palette, setPalette] = React.useState('dark');
+  const [fontSize, setFontSize] = React.useState('normal');
+  
+  const theme = createTheme({
+    palette: colorThemeOptions[palette],
+    typography: typographyThemeOptions[fontSize],
+  });
+
+  console.log('palette: ', palette);
+
+  const PageWrapper = (props) => {
+    return (
+    <ThemeProvider theme={theme}>
       <PageContent>
-        <TodoListContainer />
+        {props.children}
       </PageContent>
+    </ThemeProvider>
+    )
+  };
+
+  const TodoListPage = (
+    <PageWrapper>
+      <TodoListContainer />
+    </PageWrapper>
   );
 
   const GamePage = (
-    <PageContent>
+    <PageWrapper>
       <Game />
-    </PageContent>
+    </PageWrapper>
   );
 
   const LeaderboardPage = (
-    <PageContent>
+    <PageWrapper>
       <Leaderboard />
-    </PageContent>
+    </PageWrapper>
+  );
+
+  const SettingsPage = (
+    <PageWrapper>
+      <Settings fontSize={fontSize} palette={palette} onFontSizeChange={setFontSize} onPaletteChange={setPalette}/>
+    </PageWrapper>
   );
 
   return (
@@ -85,9 +102,9 @@ export default function App() {
           <LoginPage />
         </Route>
         <PrivateRoute path="/home">
-          <PageContent>
+          <PageWrapper>
             <h2>Home Page</h2>
-          </PageContent>
+          </PageWrapper>
         </PrivateRoute>
         <PrivateRoute path="/todos">
           {TodoListPage }
@@ -99,10 +116,13 @@ export default function App() {
         <Route exact path="/leaderboard">
           {LeaderboardPage }
         </Route>
+        <Route exact path="/settings">
+          {SettingsPage }
+        </Route>
         <Route path="*">
-          <PageContent>
+          <PageWrapper>
             <NotFound />
-          </PageContent>
+          </PageWrapper>
         </Route>
       </Switch>
     </Router>
@@ -113,9 +133,7 @@ export default function App() {
 
 ReactDOM.render(
   <LocalizationProvider dateAdapter={AdapterDayjs}>
-    <ThemeProvider theme={theme}>
-      <App />
-    </ThemeProvider>
+    <App />
   </LocalizationProvider>,
   document.getElementById('root')
 );

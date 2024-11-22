@@ -21,6 +21,6 @@
     "jsx": "react"
   },
   "include": [
-    "**/*.ts", "**/*.tsx", "jest.config.js",
+    "**/*.ts", "**/*.tsx", "jest.config.js", "src/index.js", "src/index.js",
   ]
 }

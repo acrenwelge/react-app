@@ -28,6 +28,9 @@ export default function Navbar() {
             <Link to="/todos" data-testid="todos-page-link">Todos</Link>
           </li>
           <li>
+            <Link to="/settings">Settings</Link>
+          </li>
+          <li>
             <Link to="/login">Logout</Link>
           </li>
         </ul>

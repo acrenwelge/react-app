@@ -37,7 +37,7 @@ export default class Board extends React.Component<BoardProps> {
       for (let j = 0; j < this.props.gameConfig.boardSize; j++) {
         const idx = i * this.props.gameConfig.boardSize + j;
         const winObj = this.props.winObj;
-        if (winObj && winObj.winSquares && winObj.winSquares.includes(idx)) {
+        if (winObj?.winSquares?.includes(idx)) {
           sqrs.push(this.renderSquare(idx, true));
         } else {
           sqrs.push(this.renderSquare(idx, false));
